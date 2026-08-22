@@ -31,6 +31,11 @@ def parse_args():
     p.add_argument("--batch", type=int, default=8)
     p.add_argument("--imgsz", type=int, default=640)
     p.add_argument("--workers", type=int, default=2)
+    p.add_argument("--data", default=None, help="数据 yaml 路径（默认 configs/data_final.yaml）")
+    p.add_argument("--name", default=None, help="实验名（默认 yolov26_v3 / smoke）")
+    p.add_argument("--copy-paste", type=float, default=0.0, help="Copy-Paste 增强，小目标有效，建议 0.1~0.3")
+    p.add_argument("--mixup", type=float, default=0.0, help="MixUp 增强")
+    p.add_argument("--scale", type=float, default=0.5, help="随机缩放幅度")
     return p.parse_args()
 
 
@@ -53,21 +58,27 @@ def main():
 
     if args.smoke:
         epochs = 5
-        name = "yolov26_baseline_smoke"
+        name = args.name or "yolov26_v3_smoke"
         close_mosaic = 0
     else:
         epochs = args.epochs or 300
-        name = "yolov26_baseline_v2"
+        name = args.name or "yolov26_v3"
         close_mosaic = 15
 
     check_env()
 
     model_path = PROJECT_ROOT / "yolov8s.pt"
-    data_path = PROJECT_ROOT / "configs" / "data_final.yaml"
+    if args.data:
+        data_path = Path(args.data)
+        if not data_path.is_absolute():
+            data_path = PROJECT_ROOT / data_path
+    else:
+        data_path = PROJECT_ROOT / "configs" / "data_final.yaml"
 
     print(f"模型:  {model_path.name}  (exists={model_path.exists()})")
-    print(f"数据:  {data_path.name}  (exists={data_path.exists()})")
+    print(f"数据:  {data_path}  (exists={data_path.exists()})")
     print(f"epochs={epochs}  batch={args.batch}  imgsz={args.imgsz}  name={name}")
+    print(f"copy_paste={args.copy_paste}  mixup={args.mixup}  scale={args.scale}")
     print("=" * 60)
 
     from ultralytics import YOLO
@@ -89,7 +100,9 @@ def main():
         patience=50,
         close_mosaic=close_mosaic,
         mosaic=1.0,
-        mixup=0.0,
+        mixup=args.mixup,
+        copy_paste=args.copy_paste,
+        scale=args.scale,
         amp=True,
         seed=0,
         deterministic=True,
