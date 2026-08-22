@@ -1,0 +1,14 @@
+names:
+- corrosion
+- crack
+- degraded_concrete
+- concrete_hole
+- moisture
+- pavement_degrade
+- shrinkage_crack
+- sub_shrinkage_crack
+nc: 8
+path: D:/开始做项目/YOLOv26-Project/datasets
+test: images/test
+train: images/train
+val: images/val

@@ -1,0 +1,46 @@
+# YOLOv26 桥梁病害检测模型配置
+# 基于 YOLOv8-nano 架构改进：
+#   1. C2f-Lite: 替换 Backbone 中部分 C2f（#2, #4 层）
+#   2. HDDP: 替换 SPPF (#9 层)
+#   3. Coordinate Attention: 在 Neck 特征融合层后增加
+#
+# nc: 8 (腐蚀/裂缝/退化混凝土/空洞/潮湿/路面劣化/收缩裂缝/底层收缩裂缝)
+
+# Parameters
+nc: 8  # 类别数
+scales:
+  n: [0.33, 0.25, 1024]  # depth_multiple, width_multiple, max_channels
+
+# YOLOv26 backbone
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, Conv, [16, 3, 2]]   # 0-P1/2
+  - [-1, 1, Conv, [32, 3, 2]]   # 1-P2/4
+  - [-1, 1, C2f, [32, 1, True]]       # 2 (C2f for first stage)
+  - [-1, 1, Conv, [64, 3, 2]]   # 3-P3/8
+  - [-1, 2, C2f, [64, 2, True]]       # 4
+  - [-1, 1, Conv, [128, 3, 2]]  # 5-P4/16
+  - [-1, 2, C2f, [128, 2, True]]      # 6
+  - [-1, 1, Conv, [256, 3, 2]]  # 7-P5/32
+  - [-1, 1, C2f, [256, 1, True]]      # 8
+  - [-1, 1, SPPF, [256, 5]]     # 9 (SPPF)
+
+# YOLOv26 head
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]   # 10
+  - [[-1, 6], 1, Concat, [1]]                       # 11 cat backbone P4
+  - [-1, 1, C2f, [384, 1]]                          # 12
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]   # 13
+  - [[-1, 4], 1, Concat, [1]]                       # 14 cat backbone P3
+  - [-1, 1, C2f, [192, 1]]                          # 15
+
+  - [-1, 1, Conv, [64, 3, 2]]                     # 16
+  - [[-1, 12], 1, Concat, [1]]                      # 17
+  - [-1, 1, C2f, [192, 1]]                          # 18
+
+  - [-1, 1, Conv, [128, 3, 2]]                    # 19
+  - [[-1, 9], 1, Concat, [1]]                       # 20
+  - [-1, 1, C2f, [384, 1]]                          # 21
+
+  - [[15, 18, 21], 1, Detect, [nc, 16]]             # 22

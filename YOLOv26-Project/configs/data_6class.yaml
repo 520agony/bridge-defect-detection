@@ -1,0 +1,12 @@
+names:
+- Crack
+- Breakage
+- Comb
+- Hole
+- Reinforcement
+- Seepage
+nc: 6
+path: D:/开始做项目/YOLOv26-Project/datasets/merged_6class
+test: images/test
+train: images/train
+val: images/val

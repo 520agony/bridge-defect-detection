@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>桥梁病害检测平台</title>
+<meta name="description" content="基于 YOLOv26 的桥梁病害智能检测系统，支持 7 类病害的实时识别与统计分析">
+<style>
+  :root {
+    --bg:#0a0d12; --bg-2:#0e131a;
+    --surface:#12161d; --surface-2:#171c25; --surface-3:#1c222d;
+    --border:rgba(255,255,255,.07); --border-strong:rgba(255,255,255,.13);
+    --text:#e8eaed; --muted:#9aa3ad; --faint:#5f6975;
+    --accent:#2dd4bf; --accent-hover:#5eead4; --accent-dim:rgba(45,212,191,.12);
+    --danger:#f87171; --ok:#34d399; --warn:#fbbf24;
+    --radius:14px; --radius-sm:9px;
+    --shadow:0 12px 40px rgba(0,0,0,.35);
+    --font:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior:smooth; }
+  body {
+    font-family:var(--font); background:var(--bg); color:var(--text);
+    min-height:100vh; line-height:1.55; -webkit-font-smoothing:antialiased;
+    position:relative;
+  }
+  /* 噪点质感层 */
+  body::after {
+    content:""; position:fixed; inset:0; z-index:9999; pointer-events:none; opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  button { font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+  input { font-family:inherit; }
+  ::selection { background:var(--accent-dim); }
+
+  /* ============ 认证页 ============ */
+  #authView { min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:28px 16px;
+    position:relative; overflow:hidden; background:var(--bg); }
+  #driftWall { position:absolute; inset:0; z-index:0; overflow:hidden; perspective:1200px; }
+  .drift-wall__plane { position:absolute; left:50%; top:50%; transform-origin:center center;
+    display:flex; gap:16px; will-change:transform; transform-style:preserve-3d; }
+  .drift-wall__col { flex-shrink:0; transform-style:preserve-3d; }
+  .drift-wall__track { will-change:transform; transform-style:preserve-3d; }
+  .drift-wall__tile {
+    width:220px; height:150px; margin-bottom:16px; border-radius:12px; overflow:hidden;
+    position:relative; cursor:pointer; background:#11161d; transition:transform .35s ease;
+  }
+  .drift-wall__tile.is-active { transform:translateZ(46px) scale(1.06); }
+  .drift-wall__inner { position:relative; display:block; width:100%; height:100%; }
+  .drift-wall__inner img { width:100%; height:100%; object-fit:cover; display:block; }
+  .drift-wall__overlay { position:absolute; inset:0; background:var(--dw-overlay,#0a0d12); opacity:var(--dw-dim,.6); }
+  .drift-wall__tile::after { content:""; position:absolute; inset:0; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08); border-radius:12px; pointer-events:none; }
+  .auth-card {
+    position:relative; z-index:1; width:100%; max-width:430px;
+    background:rgba(15,20,27,.55); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--border-strong); border-radius:20px; padding:42px 36px; box-shadow:var(--shadow);
+  }
+  .auth-brand { margin-bottom:30px; }
+  .auth-brand .mark { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .auth-brand .logo {
+    width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    background:var(--accent-dim); border:1px solid var(--border-strong); font-size:22px;
+  }
+  .auth-brand h1 { font-size:21px; font-weight:700; letter-spacing:-.02em; }
+  .auth-brand .sub { color:var(--muted); font-size:13px; margin-top:3px; }
+  .auth-tabs { display:flex; background:var(--surface-2); border:1px solid var(--border); border-radius:11px; padding:4px; margin-bottom:26px; }
+  .auth-tabs button { flex:1; padding:10px; border-radius:8px; color:var(--muted); font-size:14px; font-weight:600; transition:.2s; }
+  .auth-tabs button.active { background:var(--surface-3); color:var(--text); box-shadow:0 1px 6px rgba(0,0,0,.3); }
+  .field { margin-bottom:16px; }
+  .field label { display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:7px; letter-spacing:.02em; }
+  .field input {
+    width:100%; padding:12px 13px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:var(--radius-sm); font-size:14px; color:var(--text); transition:.2s;
+    font-variant-numeric:tabular-nums;
+  }
+  .field input::placeholder { color:var(--faint); }
+  .field input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim); }
+  .field .err { color:var(--danger); font-size:12px; margin-top:5px; min-height:15px; }
+  .auth-submit { width:100%; padding:13px; border-radius:var(--radius-sm); font-size:15px; font-weight:600;
+    background:var(--accent); color:#062a24; transition:.2s; letter-spacing:.01em; }
+  .auth-submit:hover { background:var(--accent-hover); }
+  .auth-submit:active { transform:scale(.985); }
+  .auth-msg { text-align:center; font-size:13px; margin-top:14px; min-height:18px; color:var(--muted); }
+  .auth-msg.err { color:var(--danger); }
+
+  /* ============ 主应用 ============ */
+  #appView { display:none; min-height:100dvh;
+    --bg:#1a222c; --bg-2:#1f2833; --surface:#202a37; --surface-2:#273443; --surface-3:#2f3d4f;
+    --border:rgba(255,255,255,.09); --border-strong:rgba(255,255,255,.16);
+    background:
+      linear-gradient(rgba(22,29,38,.5), rgba(22,29,38,.5)),
+      url('assets/2314ebfd1aa8919ba0a48608cbe34f18_720.jpg') center/cover no-repeat fixed;
+  }
+  .topbar {
+    background:rgba(26,34,44,.45); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:22px; padding:0 26px; height:62px;
+    position:sticky; top:0; z-index:100;
+  }
+  .brand { font-weight:700; font-size:16px; letter-spacing:-.01em; white-space:nowrap; display:flex; align-items:center; gap:9px; }
+  .brand .dot { width:9px; height:9px; border-radius:3px; background:var(--accent); box-shadow:0 0 10px var(--accent); }
+  .nav { display:flex; gap:2px; flex:1; overflow-x:auto; }
+  .nav button {
+    color:var(--muted); padding:8px 14px; border-radius:9px; font-size:13.5px; font-weight:500;
+    white-space:nowrap; transition:.18s;
+  }
+  .nav button:hover { color:var(--text); background:rgba(255,255,255,.08); }
+  .nav button.active { color:var(--accent); background:var(--accent-dim); }
+  .userbox { display:flex; align-items:center; gap:12px; white-space:nowrap; }
+  .userbox .name { font-size:13.5px; color:var(--muted); }
+  .userbox .logout { color:var(--muted); padding:7px 13px; border-radius:8px; font-size:13px; border:1px solid var(--border); transition:.18s; }
+  .userbox .logout:hover { color:var(--text); border-color:var(--border-strong); background:var(--surface-2); }
+
+  main { max-width:1160px; margin:0 auto; padding:34px 22px 72px; }
+  section { display:none; }
+  section.active { display:block; animation:rise .3s ease; }
+  @keyframes rise { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+  .sec-head { margin-bottom:24px; }
+  .sec-title { font-size:24px; font-weight:700; letter-spacing:-.02em; }
+  .sec-sub { color:var(--muted); font-size:13.5px; margin-top:6px; max-width:60ch; }
+
+  .card { background:rgba(32,42,55,.45); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:var(--radius); padding:26px; }
+
+  /* 上传区 */
+  .dropzone {
+    border:1.5px dashed var(--border-strong); border-radius:var(--radius); padding:46px 20px; text-align:center;
+    cursor:pointer; transition:.2s; background:rgba(32,42,55,.4); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  }
+  .dropzone:hover,.dropzone.dragover { border-color:var(--accent); background:var(--accent-dim); }
+  .dropzone .icon { font-size:42px; opacity:.9; }
+  .dropzone p { color:var(--muted); margin-top:10px; font-size:14px; }
+  .dropzone strong { color:var(--accent); font-weight:600; }
+
+  .toolbar { display:flex; align-items:center; gap:12px; margin:18px 0; flex-wrap:wrap; }
+  .btn { padding:11px 20px; border-radius:var(--radius-sm); font-size:14px; font-weight:600;
+    background:var(--accent); color:#062a24; transition:.18s; letter-spacing:.01em; }
+  .btn:hover:not(:disabled) { background:var(--accent-hover); }
+  .btn:active:not(:disabled) { transform:scale(.97); }
+  .btn:disabled { opacity:.4; cursor:not-allowed; }
+  .btn.ghost { background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
+  .btn.ghost:hover:not(:disabled) { border-color:var(--border-strong); background:var(--surface-3); }
+  .btn.danger { background:rgba(248,113,113,.14); color:var(--danger); }
+  .btn.danger:hover:not(:disabled) { background:rgba(248,113,113,.22); }
+  .status { font-size:13px; color:var(--muted); }
+  .status.err { color:var(--danger); }
+
+  /* 单张检测布局 */
+  .single-grid { display:grid; grid-template-columns:1fr 320px; gap:22px; }
+  @media (max-width:880px){ .single-grid { grid-template-columns:1fr; } }
+  .img-stage { background:var(--bg-2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-top:18px; }
+  .img-stage canvas { display:block; width:100%; height:auto; }
+  .result-list { border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; background:rgba(39,52,67,.45); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); max-height:460px; overflow-y:auto; }
+  .result-row { display:flex; align-items:center; gap:11px; padding:12px 15px; border-bottom:1px solid var(--border); font-size:13px; }
+  .result-row:last-child { border-bottom:none; }
+  .result-row .cls { font-weight:600; flex:1; }
+  .result-row .confbar { width:64px; height:7px; border-radius:4px; background:var(--surface-3); overflow:hidden; }
+  .result-row .confbar i { display:block; height:100%; }
+  .result-row .pct { color:var(--muted); font-variant-numeric:tabular-nums; min-width:44px; text-align:right; }
+
+  /* 结果网格 */
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:18px; margin-top:18px; }
+  .grid-item { background:var(--bg-2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; position:relative; }
+  .grid-item canvas { display:block; width:100%; height:auto; }
+  .grid-item .meta { position:absolute; top:10px; left:10px; background:rgba(0,0,0,.6); color:var(--text);
+    padding:4px 11px; border-radius:999px; font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+
+  /* 表格 */
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  th,td { text-align:left; padding:12px 13px; border-bottom:1px solid var(--border); }
+  th { color:var(--faint); font-weight:600; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; }
+  td { color:var(--text); font-variant-numeric:tabular-nums; }
+  tbody tr { transition:.15s; }
+  tbody tr:hover { background:var(--surface-2); }
+
+  /* 图例/芯片 */
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+  .chip { display:flex; align-items:center; gap:7px; font-size:12.5px; padding:6px 12px; border-radius:999px;
+    background:var(--surface-2); border:1px solid var(--border); color:var(--muted); }
+  .chip .dot { width:10px; height:10px; border-radius:3px; }
+
+  /* 统计卡片 */
+  .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:24px; }
+  .stat { background:rgba(32,42,55,.45); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+  .stat .num { font-size:30px; font-weight:700; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+  .stat .label { color:var(--muted); font-size:12.5px; margin-top:5px; }
+  .chart-box { background:rgba(32,42,55,.45); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid var(--border); border-radius:var(--radius); padding:22px; margin-bottom:16px; }
+  .chart-box h3 { font-size:14.5px; font-weight:600; margin-bottom:16px; color:var(--text); }
+  canvas.chart { width:100%; height:auto; display:block; }
+
+  /* 历史详情弹层 */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(3px); display:none;
+    align-items:center; justify-content:center; z-index:200; padding:20px; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:rgba(32,42,55,.6); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--border-strong); border-radius:18px;
+    max-width:780px; width:100%; max-height:90vh; overflow:auto; padding:26px; }
+  .modal h3 { margin-bottom:16px; font-size:16px; font-weight:600; }
+  .modal .canvas-wrap { background:var(--bg-2); border-radius:var(--radius); overflow:hidden; }
+  .modal canvas { display:block; width:100%; height:auto; }
+
+  .empty { text-align:center; color:var(--faint); padding:34px 20px; font-size:13.5px; }
+  .about-content { color:var(--muted); font-size:14px; line-height:1.85; }
+  .about-content h3 { margin:22px 0 10px; color:var(--text); font-size:15px; font-weight:600; }
+  .about-content p, .about-content li { max-width:70ch; }
+  .about-content ul { padding-left:20px; }
+  .about-content b { color:var(--text); }
+
+  @media (max-width:720px) {
+    .topbar { flex-wrap:wrap; height:auto; padding:12px 14px; gap:10px; }
+    .nav { order:3; width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= 认证页 ================= -->
+<div id="authView">
+  <div id="driftWall"></div>
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="mark">
+        <div class="logo">🌉</div>
+        <div>
+          <h1>桥梁病害检测平台</h1>
+          <div class="sub">基于 YOLOv26 · 7 类病害智能识别</div>
+        </div>
+      </div>
+    </div>
+    <div class="auth-tabs">
+      <button id="tabLogin" class="active" onclick="switchAuthTab('login')">登 录</button>
+      <button id="tabRegister" onclick="switchAuthTab('register')">注 册</button>
+    </div>
+
+    <form id="loginForm" onsubmit="return doLogin(event)">
+      <div class="field">
+        <label>用户名</label>
+        <input id="loginUsername" placeholder="请输入用户名" autocomplete="username">
+        <div class="err" id="loginErr"></div>
+      </div>
+      <div class="field">
+        <label>密码</label>
+        <input id="loginPassword" type="password" placeholder="请输入密码" autocomplete="current-password">
+      </div>
+      <button class="auth-submit" type="submit">登 录</button>
+    </form>
+
+    <form id="registerForm" style="display:none" onsubmit="return doRegister(event)">
+      <div class="field">
+        <label>用户名</label>
+        <input id="regUsername" placeholder="3~20 位字母/数字/中文">
+        <div class="err" id="regUsernameErr"></div>
+      </div>
+      <div class="field">
+        <label>密码</label>
+        <input id="regPassword" type="password" placeholder="至少 6 位">
+        <div class="err" id="regPasswordErr"></div>
+      </div>
+      <div class="field">
+        <label>邮箱</label>
+        <input id="regEmail" placeholder="请输入有效邮箱地址">
+        <div class="err" id="regEmailErr"></div>
+      </div>
+      <button class="auth-submit" type="submit">注册并登录</button>
+    </form>
+    <div class="auth-msg" id="authMsg"></div>
+  </div>
+</div>
+
+<!-- ================= 主应用 ================= -->
+<div id="appView">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>桥梁病害检测</div>
+    <div class="nav">
+      <button data-sec="single" class="active" onclick="showSection('single')">智能检测</button>
+      <button data-sec="detect" onclick="showSection('detect')">批量检测</button>
+      <button data-sec="analysis" onclick="showSection('analysis')">结果分析</button>
+      <button data-sec="dataset" onclick="showSection('dataset')">数据集</button>
+      <button data-sec="history" onclick="showSection('history')">检测历史</button>
+      <button data-sec="about" onclick="showSection('about')">项目说明</button>
+    </div>
+    <div class="userbox">
+      <span class="name" id="userName"></span>
+      <button class="logout" onclick="doLogout()">退出</button>
+    </div>
+  </div>
+
+  <main>
+    <!-- 单张检测 -->
+    <section id="sec-single" class="active">
+      <div class="sec-head">
+        <h2 class="sec-title">桥梁病害智能检测</h2>
+        <p class="sec-sub">上传单张桥梁图片，AI 自动识别并定位 7 类病害</p>
+      </div>
+      <div class="card">
+        <div class="single-grid">
+          <div>
+            <div class="dropzone" id="singleDropzone">
+              <div class="icon">🖼️</div>
+              <p>拖拽图片到这里，或 <strong>点击选择一张</strong>（jpg / png）</p>
+              <input type="file" id="singleFile" accept="image/*" hidden>
+            </div>
+            <div class="toolbar">
+              <button class="btn" id="singleBtn" disabled onclick="doSingleDetect()">智能检测</button>
+              <button class="btn ghost" onclick="clearSingle()">清空</button>
+              <span class="status" id="singleStatus"></span>
+            </div>
+            <div class="img-stage" id="singleStage" style="display:none"></div>
+          </div>
+          <div>
+            <div class="chips" id="singleLegend"></div>
+            <div class="result-list" id="singleResults"><div class="empty">检测结果将显示在这里</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 批量检测 -->
+    <section id="sec-detect">
+      <div class="sec-head">
+        <h2 class="sec-title">批量图片检测</h2>
+        <p class="sec-sub">一次上传多张桥梁图片，批量识别 7 类病害并标注位置</p>
+      </div>
+      <div class="card">
+        <div class="dropzone" id="dropzone">
+          <div class="icon">🗂️</div>
+          <p>拖拽图片到这里，或 <strong>点击选择多张</strong>（jpg / png）</p>
+          <input type="file" id="fileInput" accept="image/*" multiple hidden>
+        </div>
+        <div class="toolbar">
+          <button class="btn" id="detectBtn" disabled onclick="doBatchDetect()">开始检测</button>
+          <button class="btn ghost" onclick="clearDetect()">清空</button>
+          <span class="status" id="detectStatus"></span>
+        </div>
+        <div id="pendingList" class="chips"></div>
+        <div class="grid" id="detectGrid"></div>
+      </div>
+    </section>
+
+    <!-- 结果分析 -->
+    <section id="sec-analysis">
+      <div class="sec-head">
+        <h2 class="sec-title">检测结果分析</h2>
+        <p class="sec-sub">基于检测历史，统计病害分布与趋势</p>
+      </div>
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="chart-box"><h3>病害类别分布</h3><canvas class="chart" id="classChart" height="280"></canvas></div>
+      <div class="chart-box"><h3>每日检测趋势</h3><canvas class="chart" id="trendChart" height="220"></canvas></div>
+    </section>
+
+    <!-- 数据集管理 -->
+    <section id="sec-dataset">
+      <div class="sec-head">
+        <h2 class="sec-title">数据集管理</h2>
+        <p class="sec-sub">训练所用的 7 类桥梁病害数据集概览</p>
+      </div>
+      <div class="stat-grid" id="datasetStats"></div>
+      <div class="card">
+        <div class="chips" id="datasetChips"></div>
+        <table>
+          <thead><tr><th>类别</th><th>中文</th><th>标注框数</th><th>占比</th></tr></thead>
+          <tbody id="datasetTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 检测历史 -->
+    <section id="sec-history">
+      <div class="sec-head">
+        <h2 class="sec-title">检测历史</h2>
+        <p class="sec-sub">上传过的所有检测记录（最近 200 条）</p>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>#</th><th>文件名</th><th>检出数</th><th>时间</th><th>操作</th></tr></thead>
+          <tbody id="historyTable"></tbody>
+        </table>
+        <div class="empty" id="historyEmpty" style="display:none">暂无检测记录</div>
+      </div>
+    </section>
+
+    <!-- 项目说明 -->
+    <section id="sec-about">
+      <div class="sec-head">
+        <h2 class="sec-title">项目说明</h2>
+        <p class="sec-sub">基于 YOLOv26 的桥梁病害检测系统</p>
+      </div>
+      <div class="card about-content" id="aboutContent"></div>
+    </section>
+  </main>
+</div>
+
+<!-- 历史详情弹层 -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="modalTitle"></h3>
+    <div class="canvas-wrap"><canvas id="modalCanvas"></canvas></div>
+    <div class="toolbar"><button class="btn ghost" onclick="closeModal()">关闭</button></div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://127.0.0.1:8000';
+  const COLORS = { crack:'#e6194b', spalling:'#f58231', honeycomb:'#ffe119', hole:'#3cb44b',
+    rebar_exposed:'#42d4f4', seepage:'#4363d8', corrosion:'#f032e6' };
+  const ZH = { crack:'裂缝', spalling:'剥落/破损', honeycomb:'蜂窝麻面', hole:'孔洞',
+    rebar_exposed:'露筋', seepage:'渗水/潮湿', corrosion:'锈蚀/腐蚀' };
+  let token = localStorage.getItem('token') || '';
+  let currentUser = null;
+  let pendingFiles = [];
+
+  const $ = id => document.getElementById(id);
+
+  // ===== 工具 =====
+  async function api(path, opts={}) {
+    const headers = opts.headers || {};
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    if (opts.body && !(opts.body instanceof FormData)) headers['Content-Type'] = 'application/json';
+    const resp = await fetch(API + path, { ...opts, headers });
+    if (!resp.ok) {
+      const e = await resp.json().catch(()=>({}));
+      throw new Error(e.detail || `HTTP ${resp.status}`);
+    }
+    return resp.json();
+  }
+
+  // ===== 认证 =====
+  function switchAuthTab(tab) {
+    $('tabLogin').classList.toggle('active', tab==='login');
+    $('tabRegister').classList.toggle('active', tab==='register');
+    $('loginForm').style.display = tab==='login' ? '' : 'none';
+    $('registerForm').style.display = tab==='register' ? '' : 'none';
+    $('authMsg').textContent = ''; $('authMsg').className = 'auth-msg';
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    $('loginErr').textContent = '';
+    try {
+      const r = await api('/auth/login', { method:'POST',
+        body: JSON.stringify({ username:$('loginUsername').value.trim(), password:$('loginPassword').value }) });
+      setAuth(r);
+    } catch (err) { $('loginErr').textContent = err.message; }
+    return false;
+  }
+
+  async function doRegister(e) {
+    e.preventDefault();
+    ['regUsernameErr','regPasswordErr','regEmailErr'].forEach(id => $(id).textContent = '');
+    const username = $('regUsername').value.trim(), password = $('regPassword').value, email = $('regEmail').value.trim();
+    try {
+      const r = await api('/auth/register', { method:'POST', body: JSON.stringify({ username, password, email }) });
+      setAuth(r);
+    } catch (err) {
+      const m = err.message;
+      if (m.includes('用户名')) $('regUsernameErr').textContent = m;
+      else if (m.includes('密码')) $('regPasswordErr').textContent = m;
+      else if (m.includes('邮箱')) $('regEmailErr').textContent = m;
+      else { $('authMsg').textContent = m; $('authMsg').className = 'auth-msg err'; }
+    }
+    return false;
+  }
+
+  function setAuth(r) {
+    token = r.token; currentUser = r;
+    localStorage.setItem('token', token);
+    $('authView').style.display = 'none';
+    $('appView').style.display = 'block';
+    $('userName').textContent = r.username;
+    showSection('single');
+    loadDataset(); loadHistory(); loadAnalysis();
+  }
+
+  async function doLogout() {
+    try { await api('/auth/logout', { method:'POST' }); } catch(e){}
+    token = ''; currentUser = null; localStorage.removeItem('token');
+    $('appView').style.display = 'none'; $('authView').style.display = 'flex';
+  }
+
+  // ===== 导航 =====
+  function showSection(name) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    $('sec-' + name).classList.add('active');
+    document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.sec === name));
+    if (name === 'analysis') loadAnalysis();
+    if (name === 'history') loadHistory();
+  }
+
+  // ===== 单张检测 =====
+  const singleDropzone = $('singleDropzone'), singleFileInput = $('singleFile');
+  let singleFileData = null;
+
+  function renderSingleLegend() {
+    $('singleLegend').innerHTML = Object.entries(COLORS).map(([k, c]) =>
+      `<span class="chip"><span class="dot" style="background:${c}"></span>${ZH[k] || k}</span>`).join('');
+  }
+  renderSingleLegend();
+
+  singleDropzone.onclick = () => singleFileInput.click();
+  singleDropzone.ondragover = e => { e.preventDefault(); singleDropzone.classList.add('dragover'); };
+  singleDropzone.ondragleave = () => singleDropzone.classList.remove('dragover');
+  singleDropzone.ondrop = e => { e.preventDefault(); singleDropzone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) setSingleFile(e.dataTransfer.files[0]); };
+  singleFileInput.onchange = () => { if (singleFileInput.files.length) setSingleFile(singleFileInput.files[0]); };
+
+  function setSingleFile(f) {
+    if (!f.type.startsWith('image/')) { $('singleStatus').textContent = '请选择图片文件'; return; }
+    singleFileData = f;
+    const stage = $('singleStage'); stage.style.display = ''; stage.innerHTML = '';
+    const canvas = document.createElement('canvas'); stage.appendChild(canvas);
+    const img = new Image();
+    img.onload = () => { canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0); };
+    img.src = URL.createObjectURL(f);
+    $('singleBtn').disabled = false;
+    $('singleStatus').textContent = ''; $('singleStatus').classList.remove('err');
+    $('singleResults').innerHTML = '<div class="empty">点击「智能检测」开始识别</div>';
+  }
+
+  async function doSingleDetect() {
+    if (!singleFileData) return;
+    const btn = $('singleBtn'); btn.disabled = true;
+    $('singleStatus').textContent = '检测中…'; $('singleStatus').classList.remove('err');
+    const fd = new FormData(); fd.append('file', singleFileData);
+    try {
+      const r = await api('/detect', { method: 'POST', body: fd });
+      renderSingleResult(r);
+      $('singleStatus').textContent = `完成：检出 ${r.count} 处 · 推理 ${r.inference_ms} ms`;
+      loadHistory();
+    } catch (err) {
+      $('singleStatus').textContent = '出错：' + err.message; $('singleStatus').classList.add('err');
+    } finally { btn.disabled = false; }
+  }
+
+  function renderSingleResult(r) {
+    const stage = $('singleStage'); stage.innerHTML = '';
+    const canvas = document.createElement('canvas'); stage.appendChild(canvas);
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
+      ctx.lineWidth = Math.max(2, img.naturalWidth / 250);
+      ctx.font = `${Math.max(14, img.naturalWidth / 40)}px -apple-system,"Segoe UI",sans-serif`;
+      for (const d of r.detections) {
+        const [x1, y1, x2, y2] = d.bbox; const c = COLORS[d.class] || '#888';
+        ctx.strokeStyle = c; ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+        const label = `${ZH[d.class] || d.class} ${(d.confidence * 100).toFixed(0)}%`;
+        const tw = ctx.measureText(label).width + 10, th = Math.max(14, img.naturalWidth / 40) + 8;
+        const ly = y1 - th > 0 ? y1 - th : y1;
+        ctx.fillStyle = c; ctx.fillRect(x1, ly, tw, th); ctx.fillStyle = '#0a0d12'; ctx.fillText(label, x1 + 5, ly + th - 5);
+      }
+    };
+    img.src = URL.createObjectURL(singleFileData);
+
+    if (!r.detections.length) { $('singleResults').innerHTML = '<div class="empty">未检出病害</div>'; return; }
+    $('singleResults').innerHTML = r.detections.map(d => {
+      const c = COLORS[d.class] || '#888';
+      return `<div class="result-row">
+        <span class="cls" style="color:${c}">${ZH[d.class] || d.class}</span>
+        <span class="confbar"><i style="width:${(d.confidence * 100).toFixed(0)}%;background:${c}"></i></span>
+        <span class="pct">${(d.confidence * 100).toFixed(1)}%</span>
+      </div>`;
+    }).join('');
+  }
+
+  function clearSingle() {
+    singleFileData = null; singleFileInput.value = '';
+    $('singleStage').style.display = 'none'; $('singleStage').innerHTML = '';
+    $('singleBtn').disabled = true;
+    $('singleStatus').textContent = '';
+    $('singleResults').innerHTML = '<div class="empty">检测结果将显示在这里</div>';
+  }
+
+  // ===== 批量检测 =====
+  const dropzone = $('dropzone'), fileInput = $('fileInput');
+  dropzone.onclick = () => fileInput.click();
+  dropzone.ondragover = e => { e.preventDefault(); dropzone.classList.add('dragover'); };
+  dropzone.ondragleave = () => dropzone.classList.remove('dragover');
+  dropzone.ondrop = e => { e.preventDefault(); dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files); };
+  fileInput.onchange = () => { if (fileInput.files.length) addFiles(fileInput.files); };
+
+  function addFiles(files) {
+    for (const f of files) if (f.type.startsWith('image/')) pendingFiles.push(f);
+    renderPending();
+  }
+  function renderPending() {
+    $('pendingList').innerHTML = pendingFiles.map((f,i) =>
+      `<span class="chip">${f.name} <span onclick="pendingFiles.splice(${i},1);renderPending()" style="cursor:pointer;color:#f87171">✕</span></span>`
+    ).join('');
+    $('detectBtn').disabled = pendingFiles.length === 0;
+  }
+  function clearDetect() { pendingFiles = []; renderPending(); $('detectGrid').innerHTML=''; $('detectStatus').textContent=''; }
+
+  async function doBatchDetect() {
+    if (!pendingFiles.length) return;
+    const btn = $('detectBtn'); btn.disabled = true; $('detectStatus').textContent = '检测中…';
+    const fd = new FormData(); pendingFiles.forEach(f => fd.append('files', f));
+    try {
+      const r = await api('/detect/batch', { method:'POST', body: fd });
+      renderDetectGrid(r.results);
+      $('detectStatus').textContent = `完成：${r.total} 张，共检出 ${r.results.reduce((s,x)=>s+(x.count||0),0)} 处`;
+      loadHistory();
+    } catch (err) { $('detectStatus').textContent = '出错：' + err.message; $('detectStatus').classList.add('err'); }
+    finally { btn.disabled = false; }
+  }
+
+  function renderDetectGrid(results) {
+    const grid = $('detectGrid');
+    grid.innerHTML = results.map((r, i) =>
+      `<div class="grid-item" id="item-${i}"><div class="meta">${(r.count||0)} 处</div></div>`
+    ).join('');
+    results.forEach((r, i) => {
+      if (r.error) { document.getElementById('item-'+i).innerHTML = '<div class="empty">'+r.error+'</div>'; return; }
+      drawWithBoxes(document.getElementById('item-'+i), URL.createObjectURL(pendingFiles[i]), r.detections);
+    });
+  }
+
+  function drawWithBoxes(container, imgUrl, detections) {
+    const canvas = document.createElement('canvas');
+    container.appendChild(canvas);
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      ctx.lineWidth = Math.max(2, img.naturalWidth/300);
+      ctx.font = `${Math.max(13, img.naturalWidth/45)}px -apple-system,"Segoe UI",sans-serif`;
+      for (const d of detections) {
+        const [x1,y1,x2,y2] = d.bbox; const c = COLORS[d.class] || '#888';
+        ctx.strokeStyle = c; ctx.strokeRect(x1,y1,x2-x1,y2-y1);
+        const label = `${ZH[d.class]||d.class} ${(d.confidence*100).toFixed(0)}%`;
+        const tw = ctx.measureText(label).width + 10, th = Math.max(13,img.naturalWidth/45)+8;
+        const ly = y1 - th > 0 ? y1 - th : y1;
+        ctx.fillStyle = c; ctx.fillRect(x1,ly,tw,th); ctx.fillStyle = '#0a0d12'; ctx.fillText(label, x1+5, ly+th-5);
+      }
+    };
+    img.src = imgUrl;
+  }
+
+  // ===== 数据集 =====
+  async function loadDataset() {
+    try {
+      const d = await api('/dataset');
+      const total = d.total_boxes;
+      $('datasetStats').innerHTML = [
+        ['总图片数', d.total_images], ['总标注框', d.total_boxes], ['训练/验证/测试', `${d.splits.train}/${d.splits.val}/${d.splits.test}`],
+      ].map(([l,n]) => `<div class="stat"><div class="num">${n}</div><div class="label">${l}</div></div>`).join('');
+      $('datasetChips').innerHTML = d.classes.map(c =>
+        `<span class="chip"><span class="dot" style="background:${c.color}"></span>${c.zh}</span>`).join('');
+      $('datasetTable').innerHTML = d.classes.map(c =>
+        `<tr><td><b style="color:${c.color}">${c.name}</b></td><td>${c.zh}</td><td>${c.boxes.toLocaleString()}</td><td>${(c.boxes/total*100).toFixed(1)}%</td></tr>`
+      ).join('');
+    } catch(e) {}
+  }
+
+  // ===== 历史 =====
+  async function loadHistory() {
+    try {
+      const d = await api('/history');
+      const t = d.history;
+      $('historyEmpty').style.display = t.length ? 'none' : '';
+      $('historyTable').innerHTML = t.map(h =>
+        `<tr>
+          <td>${h.id}</td><td>${h.filename}</td><td><b>${h.count}</b></td>
+          <td style="color:var(--muted)">${h.created_at}</td>
+          <td><button class="btn ghost" style="padding:5px 12px" onclick="viewHistory(${h.id})">查看</button>
+              <button class="btn danger" style="padding:5px 12px" onclick="delHistory(${h.id})">删</button></td>
+        </tr>`).join('');
+    } catch(e) {}
+  }
+
+  async function viewHistory(id) {
+    try {
+      const d = await api('/history/' + id);
+      $('modalTitle').textContent = `${d.filename} · 检出 ${d.count} 处 · ${d.created_at}`;
+      $('modalOverlay').classList.add('show');
+      drawWithBoxes($('modalCanvas').parentElement, `${API}/image/${d.image}`, d.detections);
+    } catch(e) {}
+  }
+  function closeModal() { $('modalOverlay').classList.remove('show'); }
+  async function delHistory(id) {
+    if (!confirm('确认删除这条记录？')) return;
+    try { await api('/history/' + id, { method:'DELETE' }); loadHistory(); } catch(e) {}
+  }
+
+  // ===== 结果分析 =====
+  async function loadAnalysis() {
+    try {
+      const d = await api('/stats');
+      $('statGrid').innerHTML = [
+        ['检测图片', d.total_images], ['检出病害框', d.total_boxes],
+        ['病害类别', d.class_distribution.filter(c=>c.count>0).length],
+      ].map(([l,n]) => `<div class="stat"><div class="num">${n}</div><div class="label">${l}</div></div>`).join('');
+      drawClassChart(d.class_distribution);
+      drawTrendChart(d.daily);
+    } catch(e) {}
+  }
+
+  function drawClassChart(dist) {
+    const c = $('classChart'), ctx = c.getContext('2d');
+    const w = c.width = c.parentElement.clientWidth, h = c.height = 280;
+    ctx.clearRect(0,0,w,h);
+    if (!dist.length) return;
+    const pad = {l:50, r:20, t:24, b:42};
+    const max = Math.max(...dist.map(x=>x.count), 1);
+    const bw = (w - pad.l - pad.r) / dist.length;
+    ctx.font = '12px -apple-system,"Segoe UI",sans-serif';
+    dist.forEach((d, i) => {
+      const bh = (d.count/max) * (h - pad.t - pad.b);
+      const x = pad.l + i*bw + bw*0.18, y = h - pad.b - bh;
+      ctx.fillStyle = d.color; ctx.fillRect(x, y, bw*0.64, bh);
+      ctx.fillStyle = '#9aa3ad'; ctx.textAlign = 'center';
+      ctx.fillText(d.zh, pad.l + i*bw + bw/2, h - pad.b + 20);
+      ctx.fillStyle = '#e8eaed'; ctx.fillText(d.count, pad.l + i*bw + bw/2, y - 7);
+    });
+    ctx.strokeStyle = 'rgba(255,255,255,.1)'; ctx.beginPath(); ctx.moveTo(pad.l, h-pad.b); ctx.lineTo(w-pad.r, h-pad.b); ctx.stroke();
+  }
+
+  function drawTrendChart(daily) {
+    const c = $('trendChart'), ctx = c.getContext('2d');
+    const w = c.width = c.parentElement.clientWidth, h = c.height = 220;
+    ctx.clearRect(0,0,w,h);
+    if (!daily.length) return;
+    const pad = {l:50, r:20, t:20, b:42};
+    const max = Math.max(...daily.map(x=>x.count), 1);
+    const n = daily.length, sx = (w-pad.l-pad.r)/Math.max(n-1,1), sy = (h-pad.t-pad.b)/max;
+    ctx.strokeStyle = '#2dd4bf'; ctx.lineWidth = 2; ctx.beginPath();
+    daily.forEach((d, i) => {
+      const x = pad.l + i*sx, y = h - pad.b - d.count*sy;
+      i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+    });
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(45,212,191,.12)';
+    ctx.lineTo(pad.l + (n-1)*sx, h-pad.b); ctx.lineTo(pad.l, h-pad.b); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#2dd4bf';
+    daily.forEach((d,i)=>{ const x=pad.l+i*sx, y=h-pad.b-d.count*sy;
+      ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2); ctx.fill(); });
+    ctx.fillStyle = '#9aa3ad'; ctx.font = '11px -apple-system,"Segoe UI",sans-serif'; ctx.textAlign = 'center';
+    daily.forEach((d,i)=>ctx.fillText(d.date.slice(5), pad.l+i*sx, h-pad.b+20));
+  }
+
+  // ===== 项目说明 =====
+  $('aboutContent').innerHTML = `
+    <p><b>基于 YOLOv26 的桥梁病害检测系统</b>——面向桥梁表观病害的智能识别，支持 7 类缺陷的实时检测与统计分析。</p>
+    <h3>检测类别</h3>
+    <ul>${Object.entries(ZH).map(([k,v])=>`<li><b style="color:${COLORS[k]}">${v}</b>（${k}）</li>`).join('')}</ul>
+    <h3>技术栈</h3>
+    <ul>
+      <li>模型：YOLOv26（YOLOv8 架构），训练于 3.3 万张桥梁病害图像</li>
+      <li>后端：FastAPI + SQLite（用户认证、检测历史、统计分析）</li>
+      <li>前端：原生 HTML/CSS/JS 单页应用，canvas 可视化</li>
+    </ul>
+    <h3>功能</h3>
+    <ul><li>用户注册 / 登录（密码加盐哈希存储）</li><li>单张与批量图片检测</li>
+        <li>检测历史查询与回看</li><li>病害分布与趋势统计</li></ul>
+  `;
+
+  // ===== 启动：若已有 token 则自动登录 =====
+  (async function init() {
+    if (token) {
+      try { const me = await api('/auth/me'); setAuth(me); } catch(e) { token=''; localStorage.removeItem('token'); }
+    }
+  })();
+</script>
+
+<script src="assets/driftwall.js"></script>
+</body>
+</html>

@@ -1,0 +1,649 @@
+             
+
+
+                     
+
+          
+
+     -- YOLOv26 
+
+  
+
+     
+
+   
+
+   
+
+   
+   +
+
+        
+   19170663560
+   
+   15347040254
+   2026  4  20 
+
+ 
+  
+
+  1
+                       
+
+      
+""
+
+      
+
+
+      
+      1. "A"
+ "B"
+"C"2. "
+""""B""C"
+"""863 ""973 ""
+""""
+"""""
+
+      
+ 10 
+
+
+ IP 
+
+      
+      
+
+                                                              2
+            -- YOLOv26 
+                                              
+    
+                                              
+                                   
+
+                         
+
+                                   
+
+            ABC                          
+                                                
+
+   2026  4   2027  4 
+
+                  "" YOLOv26 
+            
+    ( 200    LiDAR 
+             5 
+             YOLOv26 
+            
+            
+
+                                 /              E-mail
+            2025                
+            2025       2025061   /       19170663 649127207@qq
+            2025       0090002  
+            2025                 /       560    .com
+            2022          13
+                       2025061  
+                       0010190   /
+                                         15180686 3058902256@q
+                        00116   
+                       2025061   /       597    q.com
+                       0090001
+                                         19211270 2192796220@q
+                          12     /
+                       2025061
+                       0190001         
+                                         827    q.com
+                          28      
+                       2022061           18470318 3042886672@q
+                       0090002
+                                         085    q.com
+                          30
+                                         13643131 verdik@qq.co
+        
+                                         201    m
+
+                                         
+       
+   
+                   30                         
+       
+
+                                3
+                  2022  8 
+            
+            
+            
+             IEEE  10 
+            , 2 
+            
+
+                          
+               35               
+
+          
+
+
+          
+
+
+          
+
+                  2024  6 
+            
+
+            
+             TIPTBIOMPRNNICASSP
+             ICIP  CCF  20  2
+
+                              2 
+
+                   4
+     
+     
+1.1 
+      
+
+ YOLOv26 
+
+
+
+1.2 
+      
+
+ YOLOv26 
+
+ YOLOv26 
+
+ PyTorch YOLOv26 
+CNNStacking 
+ Python 
+ LiDAR 
+ YOLOv26 
+
+ 1.3 
+""2023 ""
+
+ 18 
+ 17 
+2023 
+
+
+
+
+ 17 
+ 17 
+
+
+
+
+
+                                                                5
+ 
+      
+
+1
+            
+
+1.1 
+
+          ""
+    
+    ""
+    
+
+          "" 
+    
+    
+    
+    ""
+    """"
+     GPS 
+    
+
+          """" 
+     YOLO 
+     YOLOv26  NMSCPU 
+    LiDAR
+    
+     YOLOv26 
+    
+    ""
+
+          "
+    "
+    """"
+    
+
+                                                                6
+1.2 
+
+      
+
+
+�  
+ 5 
+ YOLOv26 ""
+�  PyTorch  YOLOv26 
+     CPU                         
+StatisticalOutlierRemoval 
+
+�   LiDAR 
+
+
+
+1. 3 
+
+       
+ PyTorch  Web 
+
+       
+
+
+
+1.4 
+
+      
+
+
+�  YOLOv26 
+ 
+""
+ GPS 
+� ""
+
+� 
+Grad-CAM ""
+""""
+
+      
+
+
+                                                                7
+2
+
+2.1 
+       YOLOv26 
+
+ PyTorch 
+
+ YOLOv26 
+
+ Web 
+
+""
+
+2.2 
+
+       YOLOv26 
+YOLOv26 
+
+
+1
+
+      
+
+ LiDAR 
+
+3m 
+
+
+
+ Statistical Outlier Removal 
+
+
+2YOLOv26 
+
+      YOLOv26  YOLOv26 
+
+YOLOv26  NMSCPU 
+ YOLO26  CPU-Friendly
+C2f-Lite 
+
+ YOLO26 
+
+ NMS 
+ YOLO26 
+
+LeakyReLU6  CPU 
+
+
+                                                                8
+3
+      
+
+
+ YOLOv26 
+
+
+
+
+"-"
+4
+
+      
+
+
+
+ Web 
+
+
+
+5
+
+      
+
+
+ YOLOv26 mAPFPS
+
+
+
+
+
+                                  1-YOLOv26 
+
+                                                                9
+ 3
+3.1  YOLOv26 
+
+      
+ YOLOv26 
+ YOLOv26  CSPDarknet 
+ PANet  5 
+
+0.5mm 
+
+3.2 
+
+      
+ YOLOv26 
+
+ 4 
+
+
+3.3 
+
+      """""
+"
+/ Grad-CAM 
+
+
+
+
+                         2-YOLO-v26 
+
+                                                               10
+4
+
+      " YOLOv26 
+"
+
+
+
+      1
+
+1.1 
+      
+
+LiDAR
+
+
+ 3.0m 
+ 70%
+
+
+1.2 
+      
+
+�
+
+CLAHE
+
+� 640�640 
+
+ RGB [0,1]
+
+                                           3-(b)  Regard3  3D 
+
+1.3 
+       LiDAR 
+
+� Statistical
+Outlier Removal
+
+
+                                                               11
+�ICP
+
+FPFH
+
+
+      2YOLOv26 
+
+2.1 
+        YOLOv26                       NMS
+
+Non-Maximum Suppression CPU 
+ YOLO 
+2.2 
+
+       0.5mm 
+ YOLOv26  CPU-Friendly C2f-Lite 
+Hybrid Dilated Pyramid Pooling
+
+
+
+2.3 
+
+      YOLOv26 
+
+
+ NMS 
+
+2.4 
+
+      
+ COCO YOLOv26 
+CSPDarknet  PANet 
+ 5 
+ LeakyReLU6  ReLU  CPU 
+
+
+      3
+
+3.1 
+      
+
+
+
+"----"
+3.2 
+
+       YOLOv26 
+
+
+                                                               12
+� LiDAR 
+
+�Coordinate Attention
+
+ GPS 
+
+
+3.3 
+      ""
+
+X, Y, Z
+
+
+      4
+
+4.1 
+      
+
+�PCA
+
+
+�
+
+
+�JTG/T H21/
+/"----"
+
+
+4.2 
+� Grad-CAM  YOLOv26 
+Grad-CAM
+""
+
+
+�Web  B/S  Web 
+
+
+
+      �
+      �
+      �
+      �
+
+                                                                            4- yolo 
+
+                                                               13
+      5
+5.1 
+
+      
+
+
+�
+�
+�3-4 
+�
+
+                                                             5- 
+
+5.2 
+      
+
+� mAP@0.5PrecisionRecall
+� FPS GPU  CPU 
+� /
+MAE
+
+                                                               14
+5.3 
+      
+
+�
+
+�
+
+0.1mm
+ LiDAR 
+�"------"
+
+
+                      6- YOLOv26 
+
+                                                               15
+5
+
+       2026  4 --2027  3  12 
+
+
+                 
+
+  2026.04 -      
+  2026.06        
+                 
+
+  2026.07 -      
+  2026.09        
+                 
+
+  2026.10 -      
+  2026.12        
+                 
+
+  2027.01 -      Web  V1.0
+  2027.03        
+                 
+
+             16
+
+3.1 
+
+       2  4 2023 
+ 100  1 
+ 5 
+ 240  PC  20  4 
+ S 
+
+
+3.2 
+
+      WINDOWS 10 64  x64 
+ NVIDIA GeForce RTX 4090 Ti  tensorflow-gpu 
+1.14.0 
+
+3.3 
+
+      
+ 3 
+
+ 16  IEEE Internet of Things
+JournalInformation Sciences  70 
+ 1  1  20  3 
+ 7  2019 2017 
+""
+
+
+
+3.4 
+
+     ""
+"
+"
+
+
+"+"
+""
+ 1000 
+
+                                                               17
+
+
+1-- YOLOv26 
+
+
+2 1~2 
+3
+4"""+" 1 
+
+           20000
+ 20000 /
+
+
+
+1
+2
+3
+4
+
+
+
+                     
+                       
+
+  18
+
+
+       
+
+        
+
+ 
+
+   19
+

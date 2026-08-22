@@ -1,0 +1,56 @@
+# YOLOv26 改进版模型配置（消融实验用）
+# =====================================
+# 基于 yolov8s 实际通道（width=0.5 缩放后：32/64/128/256/512）写死，不用 scales。
+#
+# 三个改进模块（必须先用 register_improvements.py 注册）：
+#   1. C2fLite             — 轻量化 CSP 瓶颈，替换 backbone 层 2、4
+#   2. HDDP                — 混合空洞金字塔池化，替换 SPPF（层 9）
+#   3. CoordinateAttention — 位置注意力，插入 Neck P3/P4 特征后
+#
+# ============ 关键：args 格式说明 ============
+# 标准模块（走 base_modules 分支，输入通道自动取 ch[f]）：
+#   Conv:   [输出通道, kernel, stride]
+#   C2f:    [输出通道, shortcut]    （重复次数写在第2列 n）
+#   SPPF:   [输出通道, kernel]
+#   Detect: [nc]                    （reg_max 自动追加）
+#
+# 自定义模块（走 else 分支，c2=ch[f]，即 in==out 才能通道对齐）：
+#   C2fLite:            [in_ch, out_ch, n_bottleneck]   （in==out）
+#   HDDP:               [in_ch, out_ch]                 （in==out）
+#   CoordinateAttention:[ch]                            （in==out）
+
+nc: 8
+
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, Conv, [32, 3, 2]]           # 0  P1/2   (3 -> 32)
+  - [-1, 1, Conv, [64, 3, 2]]           # 1  P2/4   (32 -> 64)
+  - [-1, 1, C2fLite, [64, 64, 1]]       # 2  改进: C2fLite (64 -> 64)
+  - [-1, 1, Conv, [128, 3, 2]]          # 3  P3/8   (64 -> 128)
+  - [-1, 1, C2fLite, [128, 128, 2]]     # 4  改进: C2fLite (128 -> 128)
+  - [-1, 1, Conv, [256, 3, 2]]          # 5  P4/16  (128 -> 256)
+  - [-1, 2, C2f, [256, True]]           # 6  标准 C2f (256 -> 256)
+  - [-1, 1, Conv, [512, 3, 2]]          # 7  P5/32  (256 -> 512)
+  - [-1, 1, C2f, [512, True]]           # 8  标准 C2f (512 -> 512)
+  - [-1, 1, HDDP, [512, 512]]           # 9  改进: HDDP 替换 SPPF (512 -> 512)
+
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]   # 10
+  - [[-1, 6], 1, Concat, [1]]                    # 11 cat backbone P4 (256+256=512)
+  - [-1, 1, C2f, [256, False]]                   # 12 (512 -> 256)
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]   # 13
+  - [[-1, 4], 1, Concat, [1]]                    # 14 cat backbone P3 (128+256=384)
+  - [-1, 1, C2f, [128, False]]                   # 15 (384 -> 128)
+  - [-1, 1, CoordinateAttention, [128]]          # 16 改进: CA (128 -> 128)
+
+  - [-1, 1, Conv, [128, 3, 2]]                   # 17 (128 -> 128)
+  - [[-1, 12], 1, Concat, [1]]                   # 18 (128+256=384)
+  - [-1, 1, C2f, [256, False]]                   # 19 (384 -> 256)
+  - [-1, 1, CoordinateAttention, [256]]          # 20 改进: CA (256 -> 256)
+
+  - [-1, 1, Conv, [256, 3, 2]]                   # 21 (256 -> 256)
+  - [[-1, 9], 1, Concat, [1]]                    # 22 (256+512=768)
+  - [-1, 1, C2f, [512, False]]                   # 23 (768 -> 512)
+
+  - [[16, 20, 23], 1, Detect, [nc]]              # 24 三个检测头 (P3/P4/P5)

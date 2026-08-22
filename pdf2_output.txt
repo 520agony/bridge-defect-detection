@@ -1,0 +1,303 @@
+      
+
+---- YOLOv26 
+                                  
+
+                               
+                                 
+
+
+
+
+
+ AI 
+
+
+
+
+1.1 
+
+     ""
+
+ YOLOv26
+
+
+
+     
+ 100 
+
+
+
+1.2 
+
+     
+ YOLOv26 
+ 95%
+ 5%
+
+ 30FPS
+
+     
+
+
+
+1.3 
+
+     
+ 1-2  1 
+50MB 30FPS""
+
+ 2-3 
+
+
+
+2.1 
+
+     ""
+
+
+ YOLOv26 
+
+
+
+2.2 
+
+      1-3 
+
+ 2-3 
+
+
+
+
+
+      4-6 
+ YOLOv26 
+
+
+ YOLOv26 
+ CIoU Loss 
+
+
+      7-9 
+
+
+
+
+
+      10-12 
+ NVIDIA Jetson 
+ Web 
+
+
+
+
+
+3.1 
+
+     Python  Python 
+ ossysjsonpickle 
+Python  2-3 
+PyTorch 
+
+ 3-4 
+
+      OpenCV 
+ OpenCV 
+ 2  NumPy Matplotlib 
+Pandas 
+
+3.2 
+
+     
+
+CNN VGGResNet
+DenseNet FPN
+ CS231n  4-6 
+
+     
+ R-CNN  YOLO SSD
+ Transformer  DETR
+ YOLO  YOLOv1  YOLOv8/v9/v10
+ 4-6 
+3.3 
+
+     
+ Lucas-Kanade 
+Horn-Schunck Farneback  FlowNetPWC-NetRAFT
+
+ OpenCV 
+ 3-4 
+
+3.4 
+
+     
+ NVIDIA Jetson Intel Neural Compute StickGoogle Coral 
+INT8/FP16
+TensorRT  NVIDIA 
+ONNX Runtime OpenVINO  Intel 
+ 3-4 
+
+
+
+4.1 YOLO 
+
+     YOLOYou Only Look OnceYOLO 
+
+YOLOv26  YOLO  v8/v9/v10
+ YOLOv8 
+
+     YOLOv8 Backbone
+ CSPDarknet Neck FPN+PAN 
+Head
+
+CBAMSEECA 
+ CIoUSIoUWIoU 
+
+4.2 
+     
+Lucas-Kanade 
+Horn-
+Schunck Farneback 
+
+
+     FlowNet 
+PWC-Net 
+RAFTRecurrent All-
+Pairs Field Transforms
+ YOLO 
+
+
+4.3 
+
+     U-Net
+-
+DeepLab ASPP 
+Segment Anything ModelSAM Meta 
+
+
+     
+
+
+
+
+4.4 
+
+      SE-Net
+ Non-localSelf-
+attention CBAM
+BAM
+
+
+ AI 
+
+5.1 
+
+     PyTorch Python  API
+ PyTorch Ultralytics 
+YOLOv8 API 
+OpenMMLab 
+MMDetectionMMSegmentationMMClassification
+
+
+5.2 
+
+     LabelImg  Pascal VOC  YOLO 
+LabelMe  MIT 
+CVATComputer Vision Annotation Tool Intel 
+
+Roboflow 
+
+
+5.3 
+
+     Weights & BiasesWandB
+TensorBoard 
+TensorFlow PyTorch 
+ClearML  MLOps 
+
+
+5.4 
+
+     NVIDIA Jetson  AI Jetson Nano 
+Jetson Xavier NX  Jetson AGX Xavier TensorRT  NVIDIA 
+ONNX
+Open Neural Network Exchange
+ONNX Runtime OpenVINO  Intel 
+ Intel 
+5.5 
+
+     Anaconda/Miniconda  Python  conda 
+VS Code  Python
+JupyterGit Jupyter Notebook 
+JupyterLab GitHub 
+ Git 
+
+
+
+6.1 
+
+      3  1-3 "
+"
+ 1000 
+ 4-6 ""
+ YOLOv26 
+ 90%
+
+      7-9 ""
+ Web 
+ 95% 5% 10-12 "
+"
+2-3 
+
+6.2 
+
+     ""
+ 2-3 
+
+
+
+      1-2  Python  PyTorch
+ 3-4  CNN  5-6  YOLO 
+ 7-8  9-10 
+
+
+
+7.1 
+
+     
+
+GAN 
+
+
+
+7.2 
+
+     
+ Dropout
+
+
+
+
+7.3 
+
+     
+FP32  FP16  INT8
+
+
+
+
+7.4 
+
+     
+ Git 
+
+
+
+
+
+
+     
+
+
+
+
