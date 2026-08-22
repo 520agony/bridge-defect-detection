@@ -26,6 +26,7 @@ datasets/
 # === 训练输出 ===
 experiments/
 runs/
+reports/
 
 # === Claude 本地配置 ===
 .claude/

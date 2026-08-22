@@ -432,6 +432,46 @@ BRIDGE_DEFECT_GRADES = {
             5: {"name": "危险", "desc": "钢筋锈蚀>60%截面", "action": "立即封闭"},
         }
     },
+    "honeycomb": {
+        "description": "蜂窝麻面",
+        "grades": {
+            1: {"name": "轻微", "desc": "蜂窝面积<3%截面", "action": "日常养护"},
+            2: {"name": "轻度", "desc": "蜂窝面积3-10%截面", "action": "定期监测"},
+            3: {"name": "中度", "desc": "蜂窝面积10-20%截面", "action": "局部修补"},
+            4: {"name": "严重", "desc": "蜂窝面积20-30%截面", "action": "结构加固"},
+            5: {"name": "危险", "desc": "蜂窝面积>30%截面", "action": "立即封闭"},
+        }
+    },
+    "hole": {
+        "description": "孔洞",
+        "grades": {
+            1: {"name": "轻微", "desc": "孔洞直径<25mm", "action": "日常养护"},
+            2: {"name": "轻度", "desc": "孔洞直径25-50mm", "action": "定期监测"},
+            3: {"name": "中度", "desc": "孔洞直径50-100mm", "action": "局部修补"},
+            4: {"name": "严重", "desc": "孔洞直径100-200mm", "action": "结构加固"},
+            5: {"name": "危险", "desc": "孔洞直径>200mm", "action": "立即封闭"},
+        }
+    },
+    "seepage": {
+        "description": "渗水/潮湿",
+        "grades": {
+            1: {"name": "轻微", "desc": "渗水面积<5%截面", "action": "日常养护"},
+            2: {"name": "轻度", "desc": "渗水面积5-15%截面", "action": "定期监测"},
+            3: {"name": "中度", "desc": "渗水面积15-30%截面", "action": "局部处理"},
+            4: {"name": "严重", "desc": "渗水面积30-50%截面", "action": "防水修复"},
+            5: {"name": "危险", "desc": "渗水面积>50%截面", "action": "立即封闭"},
+        }
+    },
+    "corrosion": {
+        "description": "锈蚀/腐蚀",
+        "grades": {
+            1: {"name": "轻微", "desc": "锈蚀面积<5%截面", "action": "日常养护"},
+            2: {"name": "轻度", "desc": "锈蚀面积5-10%截面", "action": "定期监测"},
+            3: {"name": "中度", "desc": "锈蚀面积10-30%截面", "action": "除锈防腐"},
+            4: {"name": "严重", "desc": "锈蚀面积30-60%截面", "action": "结构评定"},
+            5: {"name": "危险", "desc": "锈蚀面积>60%截面", "action": "立即封闭"},
+        }
+    },
 }
 
 
@@ -473,6 +513,38 @@ def evaluate_defect_grade(defect_type, measurements):
         elif rust_pct < 10: grade = 2
         elif rust_pct < 30: grade = 3
         elif rust_pct < 60: grade = 4
+        else: grade = 5
+
+    elif defect_type == "honeycomb":
+        area_pct = measurements.get("area_pct", 0)
+        if area_pct < 3: grade = 1
+        elif area_pct < 10: grade = 2
+        elif area_pct < 20: grade = 3
+        elif area_pct < 30: grade = 4
+        else: grade = 5
+
+    elif defect_type == "hole":
+        diameter_mm = measurements.get("diameter_mm", 0)
+        if diameter_mm < 25: grade = 1
+        elif diameter_mm < 50: grade = 2
+        elif diameter_mm < 100: grade = 3
+        elif diameter_mm < 200: grade = 4
+        else: grade = 5
+
+    elif defect_type == "seepage":
+        area_pct = measurements.get("area_pct", 0)
+        if area_pct < 5: grade = 1
+        elif area_pct < 15: grade = 2
+        elif area_pct < 30: grade = 3
+        elif area_pct < 50: grade = 4
+        else: grade = 5
+
+    elif defect_type == "corrosion":
+        area_pct = measurements.get("area_pct", 0)
+        if area_pct < 5: grade = 1
+        elif area_pct < 10: grade = 2
+        elif area_pct < 30: grade = 3
+        elif area_pct < 60: grade = 4
         else: grade = 5
 
     else:
