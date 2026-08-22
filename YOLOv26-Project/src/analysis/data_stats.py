@@ -21,7 +21,7 @@ import numpy as np
 def analyze(labels_dir, classes):
     stats = defaultdict(list)
     img_count = 0
-    for split in ["train", "val", "test"]:
+    for split in ["train", "valid", "val", "test"]:
         d = Path(labels_dir) / split
         if not d.exists():
             continue
