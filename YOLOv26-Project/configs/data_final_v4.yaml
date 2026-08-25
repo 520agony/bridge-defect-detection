@@ -1,0 +1,18 @@
+# 桥梁病害检测 - 7 类数据集（剔除有害补充数据）
+# Bridge Defect Detection - Final 7-Class Dataset v4
+# 由 scripts/build_v4_dataset.py 生成（final_7class + 有效补充，剔除 corrosion 近景/pitting）
+
+path: D:/开始做项目/YOLOv26-Project/datasets/final_7class_v4
+train: images/train
+val: images/val
+test: images/test
+
+nc: 7
+names:
+  0: crack          # 裂缝
+  1: spalling       # 破损/剥落
+  2: honeycomb      # 蜂窝麻面
+  3: hole           # 孔洞
+  4: rebar_exposed  # 露筋
+  5: seepage        # 渗水/潮湿
+  6: corrosion      # 锈蚀/腐蚀
