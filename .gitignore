@@ -18,7 +18,7 @@ env/
 *.db
 
 # === Web 上传目录（检测图/热力图）===
-web/backend/data/
+YOLOv26-Project/web/backend/data/
 
 # === 数据集（大，不纳入版本控制）===
 datasets/
