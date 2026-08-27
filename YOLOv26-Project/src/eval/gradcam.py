@@ -99,8 +99,13 @@ def grad_cam(model, x, target_layer_idx, class_id=None):
         cam = F.relu(cam)
         cam = F.interpolate(cam, size=(640, 640), mode="bilinear", align_corners=False)
         cam = cam.squeeze()  # [640, 640]
-        cam = (cam - cam.min()) / (cam.max() - cam.min() + 1e-8)
-        return cam.detach().cpu().numpy(), float(target.detach().cpu())
+        cam = cam.detach().cpu().numpy()
+        # 分位数归一化（99 分位代替最大值）：避免个别极值像素把热区压成一点（视觉上全蓝）
+        p99 = np.percentile(cam, 99)
+        cam = (cam - cam.min()) / (p99 - cam.min() + 1e-8)
+        cam = np.clip(cam, 0, 1)
+        cam = cv2.GaussianBlur(cam, (0, 0), 3)  # 高斯平滑，让热点区域更自然
+        return cam, float(target.detach().cpu())
     finally:
         h1.remove()
         h2.remove()
