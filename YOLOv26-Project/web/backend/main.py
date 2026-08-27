@@ -8,6 +8,7 @@
 """
 
 import os
+import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -25,6 +26,8 @@ from . import auth, db
 # 配置
 # ============================================================
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 MODEL_PATH = Path(os.environ.get("MODEL_PATH", PROJECT_ROOT / "experiments" / "yolov26_baseline_v2" / "weights" / "best.pt"))
 CONF_THRESHOLD = float(os.environ.get("CONF_THRESHOLD", "0.25"))
 IMGSZ = int(os.environ.get("IMGSZ", "640"))
@@ -143,7 +146,10 @@ def me(user: dict = Depends(auth.get_current_user)):
 # 检测
 # ============================================================
 def _run_detect(img: np.ndarray):
-    """对一张图推理，返回 (detections 列表, inference_ms)"""
+    """对一张图推理，返回 (detections 列表, inference_ms)。每项含量化测量 + 等级评估。"""
+    from src.analysis.measure import measure_defect
+    from src.analysis.grade import grade_defect
+
     model = get_model()
     h, w = img.shape[:2]
     results = model.predict(img, conf=CONF_THRESHOLD, imgsz=IMGSZ, verbose=False)
@@ -151,11 +157,21 @@ def _run_detect(img: np.ndarray):
     detections = []
     for box in r.boxes:
         x1, y1, x2, y2 = box.xyxy[0].tolist()
+        cls_name = r.names[int(box.cls[0])]
+        bbox = [x1, y1, x2, y2]
+        # 量化测量 + 病害等级评估（未标定 → 像素级相对严重度）
+        try:
+            meas = measure_defect(cls_name, img, bbox)
+            grade = grade_defect(cls_name, meas)
+        except Exception:
+            meas, grade = {}, {"grade": 0, "name": "未知", "action": "人工判定", "needs_calibration": True}
         detections.append({
             "class_id": int(box.cls[0]),
-            "class": r.names[int(box.cls[0])],
+            "class": cls_name,
             "confidence": round(float(box.conf[0]), 4),
             "bbox": [round(x1, 1), round(y1, 1), round(x2, 1), round(y2, 1)],
+            "measurements": meas,
+            "grade": grade,
         })
     detections.sort(key=lambda d: d["confidence"], reverse=True)
     return detections, round(float(r.speed["inference"]), 2)
@@ -220,6 +236,44 @@ async def detect_batch(files: list[UploadFile] = File(...), user: dict = Depends
                         "image": rec["image"], "inference_ms": ms})
     return {"total": len(results), "results": results,
             "classes": {c["id"]: c["name"] for c in DATASET_CLASSES}}
+
+
+# ============================================================
+# Grad-CAM 热力图
+# ============================================================
+def _generate_heatmap(model, img_bgr):
+    """生成 Grad-CAM 热力图叠加图，返回 (BGR 图, score)"""
+    import torch
+    from src.eval.gradcam import grad_cam, overlay_heatmap
+
+    detect = model.model
+    device = next(detect.parameters()).device  # 模型所在设备
+    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    img_r = cv2.resize(img_rgb, (640, 640))
+    x = torch.from_numpy(img_r).permute(2, 0, 1).float() / 255.0
+    x = x.unsqueeze(0).to(device)
+    cam, score = grad_cam(model, x, -2)
+    return overlay_heatmap(img_r, cam), float(score)
+
+
+@app.post("/heatmap")
+async def heatmap(file: UploadFile = File(...), user: dict = Depends(auth.get_current_user)):
+    img_bytes = await file.read()
+    img = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        raise HTTPException(status_code=400, detail="无法解析图片")
+
+    try:
+        model = get_model()
+        heat_img, score = _generate_heatmap(model, img)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"热力图生成失败: {e}")
+
+    stored_name = f"{uuid.uuid4().hex}_heatmap.jpg"
+    cv2.imwrite(str(UPLOAD_DIR / stored_name), heat_img, [cv2.IMWRITE_JPEG_QUALITY, 92])
+    return {"image": stored_name, "score": round(score, 4)}
 
 
 # ============================================================

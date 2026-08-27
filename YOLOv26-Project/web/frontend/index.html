@@ -156,6 +156,8 @@
   .result-row .confbar { width:64px; height:7px; border-radius:4px; background:var(--surface-3); overflow:hidden; }
   .result-row .confbar i { display:block; height:100%; }
   .result-row .pct { color:var(--muted); font-variant-numeric:tabular-nums; min-width:44px; text-align:right; }
+  .result-row .grade { font-size:11.5px; padding:3px 9px; border-radius:6px; background:var(--accent-dim); color:var(--accent); white-space:nowrap; font-weight:600; }
+  .result-row .grade.g4,.result-row .grade.g5 { background:rgba(248,113,113,.14); color:var(--danger); }
 
   /* 结果网格 */
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:18px; margin-top:18px; }
@@ -300,6 +302,7 @@
             </div>
             <div class="toolbar">
               <button class="btn" id="singleBtn" disabled onclick="doSingleDetect()">智能检测</button>
+              <button class="btn ghost" id="heatmapBtn" disabled onclick="doHeatmap()">热力图</button>
               <button class="btn ghost" onclick="clearSingle()">清空</button>
               <span class="status" id="singleStatus"></span>
             </div>
@@ -511,6 +514,7 @@
       canvas.getContext('2d').drawImage(img, 0, 0); };
     img.src = URL.createObjectURL(f);
     $('singleBtn').disabled = false;
+    $('heatmapBtn').disabled = false;
     $('singleStatus').textContent = ''; $('singleStatus').classList.remove('err');
     $('singleResults').innerHTML = '<div class="empty">点击「智能检测」开始识别</div>';
   }
@@ -553,10 +557,13 @@
     if (!r.detections.length) { $('singleResults').innerHTML = '<div class="empty">未检出病害</div>'; return; }
     $('singleResults').innerHTML = r.detections.map(d => {
       const c = COLORS[d.class] || '#888';
+      const g = d.grade || {};
+      const gtext = g.grade ? `<span class="grade g${g.grade}">${g.grade}级·${g.name}</span>` : '';
       return `<div class="result-row">
         <span class="cls" style="color:${c}">${ZH[d.class] || d.class}</span>
         <span class="confbar"><i style="width:${(d.confidence * 100).toFixed(0)}%;background:${c}"></i></span>
         <span class="pct">${(d.confidence * 100).toFixed(1)}%</span>
+        ${gtext}
       </div>`;
     }).join('');
   }
@@ -565,8 +572,37 @@
     singleFileData = null; singleFileInput.value = '';
     $('singleStage').style.display = 'none'; $('singleStage').innerHTML = '';
     $('singleBtn').disabled = true;
+    $('heatmapBtn').disabled = true;
     $('singleStatus').textContent = '';
     $('singleResults').innerHTML = '<div class="empty">检测结果将显示在这里</div>';
+  }
+
+  // ===== Grad-CAM 热力图 =====
+  async function doHeatmap() {
+    if (!singleFileData) return;
+    const btn = $('heatmapBtn'); btn.disabled = true;
+    $('singleStatus').textContent = '生成热力图中…'; $('singleStatus').classList.remove('err');
+    const fd = new FormData(); fd.append('file', singleFileData);
+    try {
+      const r = await api('/heatmap', { method: 'POST', body: fd });
+      showHeatmap(r);
+      $('singleStatus').textContent = `热力图完成 · 关注度 ${r.score}`;
+    } catch (err) {
+      $('singleStatus').textContent = '出错：' + err.message; $('singleStatus').classList.add('err');
+    } finally { btn.disabled = false; }
+  }
+
+  function showHeatmap(r) {
+    $('modalTitle').textContent = `Grad-CAM 热力图 · 最高分关注度 ${r.score}`;
+    $('modalOverlay').classList.add('show');
+    const wrap = $('modalCanvas').parentElement;
+    wrap.querySelectorAll('canvas:not(#modalCanvas)').forEach(c => c.remove());
+    const canvas = document.createElement('canvas');
+    wrap.appendChild(canvas);
+    const img = new Image();
+    img.onload = () => { canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0); };
+    img.src = `${API}/image/${r.image}`;
   }
 
   // ===== 批量检测 =====
