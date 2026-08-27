@@ -13,6 +13,8 @@ env/
 *.engine
 *.safetensors
 *.whl
+# 保留最终模型权重（供队友直接加载）
+!YOLOv26-Project/weights/bridge_defect_best.pt
 
 # === 运行时数据库 ===
 *.db
