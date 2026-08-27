@@ -14,7 +14,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -49,15 +49,15 @@ def get_model():
 # 数据集信息（7 类，静态统计）
 # ============================================================
 DATASET_CLASSES = [
-    {"id": 0, "name": "crack",         "zh": "裂缝",       "boxes": 22513, "color": "#e6194b"},
-    {"id": 1, "name": "spalling",      "zh": "剥落/破损",   "boxes": 49340, "color": "#f58231"},
-    {"id": 2, "name": "honeycomb",     "zh": "蜂窝麻面",    "boxes": 5716,  "color": "#ffe119"},
-    {"id": 3, "name": "hole",          "zh": "孔洞",       "boxes": 16232, "color": "#3cb44b"},
+    {"id": 0, "name": "crack",         "zh": "裂缝",       "boxes": 25590, "color": "#e6194b"},
+    {"id": 1, "name": "spalling",      "zh": "剥落/破损",   "boxes": 51894, "color": "#f58231"},
+    {"id": 2, "name": "honeycomb",     "zh": "蜂窝麻面",    "boxes": 7622,  "color": "#ffe119"},
+    {"id": 3, "name": "hole",          "zh": "孔洞",       "boxes": 34345, "color": "#3cb44b"},
     {"id": 4, "name": "rebar_exposed", "zh": "露筋",       "boxes": 13374, "color": "#42d4f4"},
     {"id": 5, "name": "seepage",       "zh": "渗水/潮湿",   "boxes": 21519, "color": "#4363d8"},
     {"id": 6, "name": "corrosion",     "zh": "锈蚀/腐蚀",   "boxes": 10753, "color": "#f032e6"},
 ]
-DATASET_SPLITS = {"train": 24893, "val": 4347, "test": 4345}
+DATASET_SPLITS = {"train": 32996, "val": 6683, "test": 5111}
 
 
 app = FastAPI(title="桥梁病害检测平台", version="2.0.0")
@@ -123,8 +123,14 @@ def login(body: LoginBody):
 
 
 @app.post("/auth/logout")
-def logout(user: dict = Depends(auth.get_current_user)):
-    token = ""  # 由前端删除本地 token；这里简单返回
+def logout(authorization: str = Header(default=""), user: dict = Depends(auth.get_current_user)):
+    """注销：删除服务端 session，使 token 真正失效"""
+    token = authorization.removeprefix("Bearer ").strip() if authorization.startswith("Bearer ") else ""
+    if token:
+        conn = db.get_db()
+        conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
+        conn.commit()
+        conn.close()
     return {"status": "ok"}
 
 
