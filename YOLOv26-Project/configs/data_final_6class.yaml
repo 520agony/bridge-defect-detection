@@ -1,0 +1,17 @@
+# 桥梁病害检测 - 6 类数据集（已剔除 honeycomb）
+# Bridge Defect Detection - Final 6-Class Dataset (honeycomb removed)
+# 由 scripts/build_v6_dataset.py 生成
+
+path: D:/开始做项目/YOLOv26-Project/datasets/final_6class
+train: images/train
+val: images/val
+test: images/test
+
+nc: 6
+names:
+  0: crack          # 裂缝
+  1: spalling       # 剥落
+  2: hole           # 孔洞
+  3: rebar_exposed  # 露筋
+  4: seepage        # 渗水
+  5: corrosion      # 锈蚀

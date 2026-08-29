@@ -1,0 +1,115 @@
+{
+  "A_mAP_old_test": {
+    "dataset": "final_7class test (5111 张, 无人机俯拍)",
+    "mAP50": 0.3811,
+    "mAP50-95": 0.2148,
+    "precision": 0.4848,
+    "recall": 0.4115,
+    "per_class_mAP50": {
+      "crack": 0.7684,
+      "spalling": 0.2885,
+      "honeycomb": 0.2521,
+      "hole": 0.2758,
+      "rebar_exposed": 0.3998,
+      "seepage": 0.4205,
+      "corrosion": 0.2622
+    },
+    "note": "同模型 (baseline_v2) 在 final_7class test 上的公平对比结果（之前已验证）"
+  },
+  "B_speed": {
+    "cpu_640_fps": 7.1,
+    "cpu_640_ms": 139.97
+  },
+  "C_model_size": {
+    "file_size_mb": 89.5,
+    "params_millions": 11.13
+  },
+  "D_qualitative": [
+    {
+      "file": "off_11967.jpg",
+      "label": "裂缝",
+      "detections": [
+        {
+          "class": "crack",
+          "conf": 0.653,
+          "bbox_xyxy": [
+            0.0,
+            200.4,
+            540.4,
+            435.1
+          ]
+        },
+        {
+          "class": "crack",
+          "conf": 0.616,
+          "bbox_xyxy": [
+            0.5,
+            258.3,
+            474.6,
+            447.8
+          ]
+        },
+        {
+          "class": "crack",
+          "conf": 0.464,
+          "bbox_xyxy": [
+            0.0,
+            303.6,
+            419.7,
+            451.7
+          ]
+        },
+        {
+          "class": "crack",
+          "conf": 0.456,
+          "bbox_xyxy": [
+            24.1,
+            175.8,
+            856.7,
+            409.8
+          ]
+        },
+        {
+          "class": "crack",
+          "conf": 0.352,
+          "bbox_xyxy": [
+            0.4,
+            282.2,
+            434.0,
+            486.8
+          ]
+        },
+        {
+          "class": "crack",
+          "conf": 0.309,
+          "bbox_xyxy": [
+            0.0,
+            273.5,
+            332.0,
+            412.2
+          ]
+        },
+        {
+          "class": "crack",
+          "conf": 0.295,
+          "bbox_xyxy": [
+            130.9,
+            118.6,
+            953.8,
+            282.3
+          ]
+        }
+      ]
+    },
+    {
+      "file": "cavity_dacl10k_v2_train_0135.jpg",
+      "label": "孔洞",
+      "detections": []
+    },
+    {
+      "file": "rust_dacl10k_v2_train_0009.jpg",
+      "label": "锈蚀",
+      "detections": []
+    }
+  ]
+}
