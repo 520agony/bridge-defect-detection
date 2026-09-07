@@ -22,7 +22,6 @@ def main():
     if not WEIGHTS.exists():
         print(f"  权重不存在，将由 ultralytics 自动下载 yolov8s-seg.pt ...")
     model = YOLO(str(WEIGHTS) if WEIGHTS.exists() else 'yolov8s-seg.pt')
-    model.to('cpu')  # 避免 device mismatch（与 eval_model.py 同处理）
 
     print(f"数据: {DATA}")
     print(f"输出: {OUT}")
@@ -33,8 +32,8 @@ def main():
         epochs=5,
         batch=8,
         imgsz=640,
-        device='cpu',
-        workers=0,           # Windows 上避免 dataloader 多进程
+        device=0,
+        workers=2,
         optimizer='AdamW',
         lr0=0.001,
         lrf=0.01,

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>桥梁病害检测平台</title>
-<meta name="description" content="基于 YOLOv26 的桥梁病害智能检测系统，支持 7 类病害的实时识别与统计分析">
+<meta name="description" content="基于 YOLOv26 的桥梁病害智能检测系统，支持 6 类病害的实时识别与统计分析">
 <style>
   :root {
     --bg:#0a0d12; --bg-2:#0e131a;
@@ -223,7 +223,7 @@
         <div class="logo">🌉</div>
         <div>
           <h1>桥梁病害检测平台</h1>
-          <div class="sub">基于 YOLOv26 · 7 类病害智能识别</div>
+          <div class="sub">基于 YOLOv26 · 6 类病害智能识别</div>
         </div>
       </div>
     </div>
@@ -290,7 +290,7 @@
     <section id="sec-single" class="active">
       <div class="sec-head">
         <h2 class="sec-title">桥梁病害智能检测</h2>
-        <p class="sec-sub">上传单张桥梁图片，AI 自动识别并定位 7 类病害</p>
+        <p class="sec-sub">上传单张桥梁图片，AI 自动识别并定位 6 类病害</p>
       </div>
       <div class="card">
         <div class="single-grid">
@@ -320,7 +320,7 @@
     <section id="sec-detect">
       <div class="sec-head">
         <h2 class="sec-title">批量图片检测</h2>
-        <p class="sec-sub">一次上传多张桥梁图片，批量识别 7 类病害并标注位置</p>
+        <p class="sec-sub">一次上传多张桥梁图片，批量识别 6 类病害并标注位置</p>
       </div>
       <div class="card">
         <div class="dropzone" id="dropzone">
@@ -353,7 +353,7 @@
     <section id="sec-dataset">
       <div class="sec-head">
         <h2 class="sec-title">数据集管理</h2>
-        <p class="sec-sub">训练所用的 7 类桥梁病害数据集概览</p>
+        <p class="sec-sub">训练所用的 6 类桥梁病害数据集概览</p>
       </div>
       <div class="stat-grid" id="datasetStats"></div>
       <div class="card">
@@ -402,9 +402,9 @@
 
 <script>
   const API = 'http://127.0.0.1:8000';
-  const COLORS = { crack:'#e6194b', spalling:'#f58231', honeycomb:'#ffe119', hole:'#3cb44b',
+  const COLORS = { crack:'#e6194b', spalling:'#f58231', hole:'#3cb44b',
     rebar_exposed:'#42d4f4', seepage:'#4363d8', corrosion:'#f032e6' };
-  const ZH = { crack:'裂缝', spalling:'剥落/破损', honeycomb:'蜂窝麻面', hole:'孔洞',
+  const ZH = { crack:'裂缝', spalling:'剥落/破损', hole:'孔洞',
     rebar_exposed:'露筋', seepage:'渗水/潮湿', corrosion:'锈蚀/腐蚀' };
   let token = localStorage.getItem('token') || '';
   let currentUser = null;
@@ -662,11 +662,29 @@
       ctx.font = `${Math.max(13, img.naturalWidth/45)}px -apple-system,"Segoe UI",sans-serif`;
       for (const d of detections) {
         const [x1,y1,x2,y2] = d.bbox; const c = COLORS[d.class] || '#888';
-        ctx.strokeStyle = c; ctx.strokeRect(x1,y1,x2-x1,y2-y1);
+        // mask 半透明色块
+        if (d.mask && d.mask.length > 2) {
+          ctx.fillStyle = c + '55'; // 33% 透明度
+          ctx.beginPath();
+          ctx.moveTo(d.mask[0][0], d.mask[0][1]);
+          for (let i = 1; i < d.mask.length; i++) ctx.lineTo(d.mask[i][0], d.mask[i][1]);
+          ctx.closePath(); ctx.fill();
+          // mask 边框
+          ctx.strokeStyle = c; ctx.lineWidth = Math.max(1.5, img.naturalWidth/400);
+          ctx.beginPath();
+          ctx.moveTo(d.mask[0][0], d.mask[0][1]);
+          for (let i = 1; i < d.mask.length; i++) ctx.lineTo(d.mask[i][0], d.mask[i][1]);
+          ctx.closePath(); ctx.stroke();
+        } else {
+          // 无 mask 时退回画框
+          ctx.strokeStyle = c; ctx.strokeRect(x1,y1,x2-x1,y2-y1);
+        }
+        // 标签 + 置信度
         const label = `${ZH[d.class]||d.class} ${(d.confidence*100).toFixed(0)}%`;
         const tw = ctx.measureText(label).width + 10, th = Math.max(13,img.naturalWidth/45)+8;
         const ly = y1 - th > 0 ? y1 - th : y1;
-        ctx.fillStyle = c; ctx.fillRect(x1,ly,tw,th); ctx.fillStyle = '#0a0d12'; ctx.fillText(label, x1+5, ly+th-5);
+        ctx.fillStyle = c; ctx.fillRect(x1,ly,tw,th);
+        ctx.fillStyle = '#0a0d12'; ctx.fillText(label, x1+5, ly+th-5);
       }
     };
     img.src = imgUrl;
@@ -776,7 +794,7 @@
 
   // ===== 项目说明 =====
   $('aboutContent').innerHTML = `
-    <p><b>基于 YOLOv26 的桥梁病害检测系统</b>——面向桥梁表观病害的智能识别，支持 7 类缺陷的实时检测与统计分析。</p>
+    <p><b>基于 YOLOv26 的桥梁病害检测系统</b>——面向桥梁表观病害的智能识别，支持 6 类缺陷的实时检测与统计分析。</p>
     <h3>检测类别</h3>
     <ul>${Object.entries(ZH).map(([k,v])=>`<li><b style="color:${COLORS[k]}">${v}</b>（${k}）</li>`).join('')}</ul>
     <h3>技术栈</h3>

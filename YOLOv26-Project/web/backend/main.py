@@ -28,7 +28,7 @@ from . import auth, db
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-MODEL_PATH = Path(os.environ.get("MODEL_PATH", PROJECT_ROOT / "experiments" / "yolov26_baseline_v2" / "weights" / "best.pt"))
+MODEL_PATH = Path(os.environ.get("MODEL_PATH", PROJECT_ROOT / "experiments" / "v6_seg_v2" / "weights" / "best.pt"))
 CONF_THRESHOLD = float(os.environ.get("CONF_THRESHOLD", "0.25"))
 IMGSZ = int(os.environ.get("IMGSZ", "640"))
 UPLOAD_DIR = Path(__file__).resolve().parent / "data" / "images"
@@ -52,15 +52,14 @@ def get_model():
 # 数据集信息（7 类，静态统计）
 # ============================================================
 DATASET_CLASSES = [
-    {"id": 0, "name": "crack",         "zh": "裂缝",       "boxes": 25590, "color": "#e6194b"},
-    {"id": 1, "name": "spalling",      "zh": "剥落/破损",   "boxes": 51894, "color": "#f58231"},
-    {"id": 2, "name": "honeycomb",     "zh": "蜂窝麻面",    "boxes": 7622,  "color": "#ffe119"},
-    {"id": 3, "name": "hole",          "zh": "孔洞",       "boxes": 34345, "color": "#3cb44b"},
-    {"id": 4, "name": "rebar_exposed", "zh": "露筋",       "boxes": 13374, "color": "#42d4f4"},
-    {"id": 5, "name": "seepage",       "zh": "渗水/潮湿",   "boxes": 21519, "color": "#4363d8"},
-    {"id": 6, "name": "corrosion",     "zh": "锈蚀/腐蚀",   "boxes": 10753, "color": "#f032e6"},
+    {"id": 0, "name": "crack",         "zh": "裂缝",       "boxes": 29293, "color": "#e6194b"},
+    {"id": 1, "name": "spalling",      "zh": "剥落/破损",   "boxes": 50965, "color": "#f58231"},
+    {"id": 2, "name": "hole",          "zh": "孔洞",       "boxes": 28876, "color": "#3cb44b"},
+    {"id": 3, "name": "rebar_exposed", "zh": "露筋",       "boxes": 23177, "color": "#42d4f4"},
+    {"id": 4, "name": "seepage",       "zh": "渗水/潮湿",   "boxes": 21130, "color": "#4363d8"},
+    {"id": 5, "name": "corrosion",     "zh": "锈蚀/腐蚀",   "boxes": 10512, "color": "#f032e6"},
 ]
-DATASET_SPLITS = {"train": 32996, "val": 6683, "test": 5111}
+DATASET_SPLITS = {"train": 47699, "val": 6004, "test": 5107}
 
 
 app = FastAPI(title="桥梁病害检测平台", version="2.0.0")
@@ -146,7 +145,9 @@ def me(user: dict = Depends(auth.get_current_user)):
 # 检测
 # ============================================================
 def _run_detect(img: np.ndarray):
-    """对一张图推理，返回 (detections 列表, inference_ms)。每项含量化测量 + 等级评估。"""
+    """对一张图推理，返回 (detections 列表, inference_ms)。
+    每项含 bbox + mask 多边形点列 + 量化测量 + 等级评估。
+    """
     from src.analysis.measure import measure_defect
     from src.analysis.grade import grade_defect
 
@@ -155,21 +156,31 @@ def _run_detect(img: np.ndarray):
     results = model.predict(img, conf=CONF_THRESHOLD, imgsz=IMGSZ, verbose=False)
     r = results[0]
     detections = []
-    for box in r.boxes:
+    if r.masks is None:
+        return detections, round(float(r.speed['inference']), 2)
+    # 归一化 mask 坐标转回原图绝对坐标
+    h_ratio, w_ratio = h / IMGSZ, w / IMGSZ
+    for i, box in enumerate(r.boxes):
         x1, y1, x2, y2 = box.xyxy[0].tolist()
-        cls_name = r.names[int(box.cls[0])]
+        cls_id = int(box.cls[0])
+        cls_name = r.names[cls_id]
+        conf = float(box.conf[0])
+        # 取 mask 多边形（xy 归一化 → 原图绝对像素）
+        poly = r.masks.xyn[i].reshape(-1, 2).tolist()
+        poly_abs = [[round(p[0] * w, 1), round(p[1] * h, 1)] for p in poly]
         bbox = [x1, y1, x2, y2]
-        # 量化测量 + 病害等级评估（未标定 → 像素级相对严重度）
         try:
-            meas = measure_defect(cls_name, img, bbox)
+            meas = measure_defect(cls_name, img, bbox, mask=poly_abs)
             grade = grade_defect(cls_name, meas)
         except Exception:
             meas, grade = {}, {"grade": 0, "name": "未知", "action": "人工判定", "needs_calibration": True}
         detections.append({
-            "class_id": int(box.cls[0]),
+            "class_id": cls_id,
             "class": cls_name,
-            "confidence": round(float(box.conf[0]), 4),
+            "confidence": round(conf, 4),
             "bbox": [round(x1, 1), round(y1, 1), round(x2, 1), round(y2, 1)],
+            "mask": poly_abs,  # 原图像素坐标
+            "mask_points": len(poly),  # 多边形顶点数
             "measurements": meas,
             "grade": grade,
         })

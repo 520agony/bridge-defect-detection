@@ -1,0 +1,16 @@
+# 桥梁病害检测 - 6 类 seg 数据集 v3（真裂缝 polygon 主导）
+# 由 scripts/build_v6_v3.py 生成（final_6class + 20类真polygon，剔除主干假裂缝）
+
+path: D:/开始做项目/YOLOv26-Project/datasets/final_6class_v3
+train: images/train
+val: images/val
+test: images/test
+
+nc: 6
+names:
+  0: crack          # 裂缝
+  1: spalling       # 剥落
+  2: hole           # 孔洞
+  3: rebar_exposed  # 露筋
+  4: seepage        # 渗水
+  5: corrosion      # 锈蚀

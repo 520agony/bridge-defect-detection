@@ -1,0 +1,17 @@
+# v3 真 polygon 评估集（重建 test，剔假矩形+并20类真polygon）
+# 由 scripts/build_v3_test_realpoly.py 生成
+# 用途：用 v3 训练好的 seg 模型在"全真polygon" GT 上评估
+
+path: D:/开始做项目/YOLOv26-Project/datasets/v3_test_realpoly
+train: images/train
+val: images/val
+test: images/test
+
+nc: 6
+names:
+  0: crack
+  1: spalling
+  2: hole
+  3: rebar_exposed
+  4: seepage
+  5: corrosion
