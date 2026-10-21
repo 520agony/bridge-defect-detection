@@ -1,0 +1,16 @@
+# 闭卷测试集 v1（2026-10-15 固化）
+# 1665 张，与"旧训练集（pre-wash final_5class）"零同源孪生 —— 唯一公平评测口径
+# 用法: python scripts/eval_wash_compare.py --weight <权重> --tag <标签> --data configs/data_test_honest_v1.yaml
+# 详细说明见 datasets/test_honest_v1/README.md
+path: D:/开始做项目/YOLOv26-Project/datasets/test_honest_v1
+train: images/test
+val: images/test
+test: images/test
+
+nc: 5
+names:
+  0: crack
+  1: spalling
+  2: hole
+  3: rebar_exposed
+  4: efflorescence

@@ -1,0 +1,13 @@
+# 5类 seg 清洗版（build_clean5.py 从 final_5class_wash 生成，test与wash逐字节一致）
+path: D:/开始做项目/YOLOv26-Project/datasets/final_5class_clean
+train: images/train
+val: images/val
+test: images/test
+
+nc: 5
+names:
+  0: crack
+  1: spalling
+  2: hole
+  3: rebar_exposed
+  4: efflorescence

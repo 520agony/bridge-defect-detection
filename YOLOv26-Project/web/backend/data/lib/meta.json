@@ -1,0 +1,302 @@
+[
+ {
+  "file": "lib_crack_2.jpg",
+  "main": "crack",
+  "classes": [
+   "crack"
+  ],
+  "zh": [
+   "裂缝"
+  ]
+ },
+ {
+  "file": "lib_crack_3.jpg",
+  "main": "crack",
+  "classes": [
+   "crack"
+  ],
+  "zh": [
+   "裂缝"
+  ]
+ },
+ {
+  "file": "lib_crack_4.jpg",
+  "main": "crack",
+  "classes": [
+   "crack"
+  ],
+  "zh": [
+   "裂缝"
+  ]
+ },
+ {
+  "file": "lib_crack_5.jpg",
+  "main": "crack",
+  "classes": [
+   "crack"
+  ],
+  "zh": [
+   "裂缝"
+  ]
+ },
+ {
+  "file": "lib_crack_6.jpg",
+  "main": "crack",
+  "classes": [
+   "crack"
+  ],
+  "zh": [
+   "裂缝"
+  ]
+ },
+ {
+  "file": "lib_spalling_1.jpg",
+  "main": "spalling",
+  "classes": [
+   "spalling"
+  ],
+  "zh": [
+   "剥落"
+  ]
+ },
+ {
+  "file": "lib_spalling_2.jpg",
+  "main": "spalling",
+  "classes": [
+   "crack",
+   "spalling",
+   "rebar_exposed"
+  ],
+  "zh": [
+   "裂缝",
+   "剥落",
+   "露筋"
+  ]
+ },
+ {
+  "file": "lib_spalling_3.jpg",
+  "main": "spalling",
+  "classes": [
+   "spalling"
+  ],
+  "zh": [
+   "剥落"
+  ]
+ },
+ {
+  "file": "lib_spalling_4.jpg",
+  "main": "spalling",
+  "classes": [
+   "crack",
+   "spalling",
+   "rebar_exposed"
+  ],
+  "zh": [
+   "裂缝",
+   "剥落",
+   "露筋"
+  ]
+ },
+ {
+  "file": "lib_spalling_5.jpg",
+  "main": "spalling",
+  "classes": [
+   "spalling"
+  ],
+  "zh": [
+   "剥落"
+  ]
+ },
+ {
+  "file": "lib_spalling_6.jpg",
+  "main": "spalling",
+  "classes": [
+   "spalling",
+   "rebar_exposed"
+  ],
+  "zh": [
+   "剥落",
+   "露筋"
+  ]
+ },
+ {
+  "file": "lib_hole_1.jpg",
+  "main": "hole",
+  "classes": [
+   "hole"
+  ],
+  "zh": [
+   "孔洞"
+  ]
+ },
+ {
+  "file": "lib_hole_2.jpg",
+  "main": "hole",
+  "classes": [
+   "hole"
+  ],
+  "zh": [
+   "孔洞"
+  ]
+ },
+ {
+  "file": "lib_hole_3.jpg",
+  "main": "hole",
+  "classes": [
+   "hole"
+  ],
+  "zh": [
+   "孔洞"
+  ]
+ },
+ {
+  "file": "lib_hole_4.jpg",
+  "main": "hole",
+  "classes": [
+   "hole"
+  ],
+  "zh": [
+   "孔洞"
+  ]
+ },
+ {
+  "file": "lib_hole_5.jpg",
+  "main": "hole",
+  "classes": [
+   "hole"
+  ],
+  "zh": [
+   "孔洞"
+  ]
+ },
+ {
+  "file": "lib_hole_6.jpg",
+  "main": "hole",
+  "classes": [
+   "hole"
+  ],
+  "zh": [
+   "孔洞"
+  ]
+ },
+ {
+  "file": "lib_rebar_exposed_1.jpg",
+  "main": "rebar_exposed",
+  "classes": [
+   "rebar_exposed"
+  ],
+  "zh": [
+   "露筋"
+  ]
+ },
+ {
+  "file": "lib_rebar_exposed_2.jpg",
+  "main": "rebar_exposed",
+  "classes": [
+   "rebar_exposed"
+  ],
+  "zh": [
+   "露筋"
+  ]
+ },
+ {
+  "file": "lib_rebar_exposed_3.jpg",
+  "main": "rebar_exposed",
+  "classes": [
+   "rebar_exposed"
+  ],
+  "zh": [
+   "露筋"
+  ]
+ },
+ {
+  "file": "lib_rebar_exposed_4.jpg",
+  "main": "rebar_exposed",
+  "classes": [
+   "rebar_exposed"
+  ],
+  "zh": [
+   "露筋"
+  ]
+ },
+ {
+  "file": "lib_rebar_exposed_5.jpg",
+  "main": "rebar_exposed",
+  "classes": [
+   "rebar_exposed"
+  ],
+  "zh": [
+   "露筋"
+  ]
+ },
+ {
+  "file": "lib_rebar_exposed_6.jpg",
+  "main": "rebar_exposed",
+  "classes": [
+   "rebar_exposed"
+  ],
+  "zh": [
+   "露筋"
+  ]
+ },
+ {
+  "file": "lib_efflorescence_1.jpg",
+  "main": "efflorescence",
+  "classes": [
+   "efflorescence"
+  ],
+  "zh": [
+   "泛碱"
+  ]
+ },
+ {
+  "file": "lib_efflorescence_2.jpg",
+  "main": "efflorescence",
+  "classes": [
+   "efflorescence"
+  ],
+  "zh": [
+   "泛碱"
+  ]
+ },
+ {
+  "file": "lib_efflorescence_3.jpg",
+  "main": "efflorescence",
+  "classes": [
+   "efflorescence"
+  ],
+  "zh": [
+   "泛碱"
+  ]
+ },
+ {
+  "file": "lib_efflorescence_4.jpg",
+  "main": "efflorescence",
+  "classes": [
+   "efflorescence"
+  ],
+  "zh": [
+   "泛碱"
+  ]
+ },
+ {
+  "file": "lib_efflorescence_5.jpg",
+  "main": "efflorescence",
+  "classes": [
+   "efflorescence"
+  ],
+  "zh": [
+   "泛碱"
+  ]
+ },
+ {
+  "file": "lib_efflorescence_6.jpg",
+  "main": "efflorescence",
+  "classes": [
+   "efflorescence"
+  ],
+  "zh": [
+   "泛碱"
+  ]
+ }
+]

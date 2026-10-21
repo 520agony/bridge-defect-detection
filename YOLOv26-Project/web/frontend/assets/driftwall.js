@@ -9,36 +9,28 @@
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // 7 类病害样例图（每类 4 张，带标注框）
+  // 5 类病害样例图（每类 4 张，带标注框）
   const IMAGES = [
     { image: 'assets/samples/crack_1.jpg', title: '裂缝' },
     { image: 'assets/samples/crack_2.jpg', title: '裂缝' },
     { image: 'assets/samples/crack_3.jpg', title: '裂缝' },
     { image: 'assets/samples/crack_4.jpg', title: '裂缝' },
-    { image: 'assets/samples/spalling_1.jpg', title: '剥落' },
-    { image: 'assets/samples/spalling_2.jpg', title: '剥落' },
-    { image: 'assets/samples/spalling_3.jpg', title: '剥落' },
-    { image: 'assets/samples/spalling_4.jpg', title: '剥落' },
-    { image: 'assets/samples/honeycomb_1.jpg', title: '蜂窝麻面' },
-    { image: 'assets/samples/honeycomb_2.jpg', title: '蜂窝麻面' },
-    { image: 'assets/samples/honeycomb_3.jpg', title: '蜂窝麻面' },
-    { image: 'assets/samples/honeycomb_4.jpg', title: '蜂窝麻面' },
     { image: 'assets/samples/hole_1.jpg', title: '孔洞' },
     { image: 'assets/samples/hole_2.jpg', title: '孔洞' },
     { image: 'assets/samples/hole_3.jpg', title: '孔洞' },
     { image: 'assets/samples/hole_4.jpg', title: '孔洞' },
+    { image: 'assets/samples/spalling_1.jpg', title: '剥落' },
+    { image: 'assets/samples/spalling_2.jpg', title: '剥落' },
+    { image: 'assets/samples/spalling_3.jpg', title: '剥落' },
+    { image: 'assets/samples/spalling_4.jpg', title: '剥落' },
     { image: 'assets/samples/rebar_exposed_1.jpg', title: '露筋' },
     { image: 'assets/samples/rebar_exposed_2.jpg', title: '露筋' },
     { image: 'assets/samples/rebar_exposed_3.jpg', title: '露筋' },
     { image: 'assets/samples/rebar_exposed_4.jpg', title: '露筋' },
-    { image: 'assets/samples/seepage_1.jpg', title: '渗水' },
-    { image: 'assets/samples/seepage_2.jpg', title: '渗水' },
-    { image: 'assets/samples/seepage_3.jpg', title: '渗水' },
-    { image: 'assets/samples/seepage_4.jpg', title: '渗水' },
-    { image: 'assets/samples/corrosion_1.jpg', title: '锈蚀' },
-    { image: 'assets/samples/corrosion_2.jpg', title: '锈蚀' },
-    { image: 'assets/samples/corrosion_3.jpg', title: '锈蚀' },
-    { image: 'assets/samples/corrosion_4.jpg', title: '锈蚀' },
+    { image: 'assets/samples/efflorescence_1.jpg', title: '泛碱' },
+    { image: 'assets/samples/efflorescence_2.jpg', title: '泛碱' },
+    { image: 'assets/samples/efflorescence_3.jpg', title: '泛碱' },
+    { image: 'assets/samples/efflorescence_4.jpg', title: '泛碱' },
   ];
 
   const CFG = {

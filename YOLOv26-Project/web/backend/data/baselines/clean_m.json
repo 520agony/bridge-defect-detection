@@ -1,0 +1,37 @@
+{
+ "tag": "clean_m",
+ "weight": "../第二轮/best.pt",
+ "n_test": 2474,
+ "box": {
+  "P": 0.5364,
+  "R": 0.4463,
+  "mAP50": 0.4461,
+  "mAP50_95": 0.3104,
+  "per_class_mAP50": {
+   "crack": 0.6299,
+   "spalling": 0.4077,
+   "hole": 0.7899,
+   "rebar_exposed": 0.1991,
+   "efflorescence": 0.204
+  }
+ },
+ "mask": {
+  "P": 0.5112,
+  "R": 0.4248,
+  "mAP50": 0.4146,
+  "mAP50_95": 0.2485,
+  "per_class_mAP50": {
+   "crack": 0.5424,
+   "spalling": 0.3855,
+   "hole": 0.7866,
+   "rebar_exposed": 0.1583,
+   "efflorescence": 0.2002
+  }
+ },
+ "speed_ms": {
+  "preprocess": 4.82,
+  "inference": 32.37,
+  "loss": 0.0,
+  "postprocess": 1.1
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "tag": "honest_s",
+ "weight": "../第一轮/best.pt",
+ "n_test": 2474,
+ "box": {
+  "P": 0.5902,
+  "R": 0.4813,
+  "mAP50": 0.4798,
+  "mAP50_95": 0.3414,
+  "per_class_mAP50": {
+   "crack": 0.6696,
+   "spalling": 0.3478,
+   "hole": 0.879,
+   "rebar_exposed": 0.2619,
+   "efflorescence": 0.2406
+  }
+ },
+ "mask": {
+  "P": 0.5615,
+  "R": 0.4717,
+  "mAP50": 0.4543,
+  "mAP50_95": 0.2824,
+  "per_class_mAP50": {
+   "crack": 0.5883,
+   "spalling": 0.3487,
+   "hole": 0.8623,
+   "rebar_exposed": 0.2227,
+   "efflorescence": 0.2496
+  }
+ },
+ "speed_ms": {
+  "preprocess": 4.75,
+  "inference": 13.85,
+  "loss": 0.0,
+  "postprocess": 1.1
+ }
+}

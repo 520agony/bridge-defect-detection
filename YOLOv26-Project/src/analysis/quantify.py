@@ -14,6 +14,7 @@ import json
 from pathlib import Path
 
 import cv2
+import numpy as np
 from ultralytics import YOLO
 
 from src.analysis import CLASS_ZH
@@ -30,7 +31,7 @@ def list_images(source):
 
 
 def process_image(model, img_path, conf, px_per_mm):
-    img = cv2.imread(str(img_path))
+    img = cv2.imdecode(np.fromfile(str(img_path), dtype=np.uint8), cv2.IMREAD_COLOR)
     if img is None:
         raise ValueError(f"无法读取图片: {img_path}")
     H, W = img.shape[:2]

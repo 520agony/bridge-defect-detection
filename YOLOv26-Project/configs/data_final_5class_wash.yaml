@@ -1,0 +1,13 @@
+# 5类 seg 独立测试集版（wash脚本生成，test/val与train零同源泄漏）
+path: D:/开始做项目/YOLOv26-Project/datasets/final_5class_wash
+train: images/train
+val: images/val
+test: images/test
+
+nc: 5
+names:
+  0: crack
+  1: spalling
+  2: hole
+  3: rebar_exposed
+  4: efflorescence

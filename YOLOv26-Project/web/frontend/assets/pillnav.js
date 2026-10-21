@@ -9,13 +9,18 @@
   const ITEMS = [
     { label: '智能检测', sec: 'single' },
     { label: '批量检测', sec: 'detect' },
+    { label: '素材演示库', sec: 'lib' },
+    { label: '视频检测', sec: 'video' },
+    { label: '实时摄像头', sec: 'camera' },
+    { label: '融合演示', sec: 'fusion' },
     { label: '结果分析', sec: 'analysis' },
+    { label: '模型对比', sec: 'compare' },
     { label: '数据集', sec: 'dataset' },
     { label: '检测历史', sec: 'history' },
     { label: '项目说明', sec: 'about' },
   ];
   const EASE = 'power3.easeOut';
-  const COLORS = { base: '#cbd5e1', pill: '#2dd4bf', hover: '#07110e' };
+  const COLORS = { base: '#ffffff', pill: '#ffffff', hover: '#120F17' };
 
   const circles = [];
   const timelines = [];
@@ -30,7 +35,12 @@
   logo.className = 'pill-logo';
   logo.href = '#';
   logo.setAttribute('aria-label', '首页');
-  logo.innerHTML = '<span class="pill-logo-mark">🌉</span>';
+  logo.innerHTML = '<span class="pill-logo-mark">🌉</span><span>桥梁病害检测</span>';
+  logo.addEventListener('click', e => {
+    e.preventDefault();
+    if (typeof window.showSection === 'function') window.showSection('single');
+    setActive('single');
+  });
   navEl.appendChild(logo);
 
   const list = document.createElement('ul');
@@ -92,6 +102,7 @@
       if (!pill) return;
       const rect = pill.getBoundingClientRect();
       const w = rect.width, h = rect.height;
+      if (w < 2 || h < 2) return; // 容器隐藏时测量为 0（登录页阶段），跳过；可见后由 ResizeObserver 自动重算
       const R = ((w * w) / 4 + h * h) / (2 * h);
       const D = Math.ceil(2 * R) + 2;
       const delta = Math.ceil(R - Math.sqrt(Math.max(0, R * R - (w * w) / 4))) + 1;
@@ -141,10 +152,24 @@
       a.classList.toggle('is-active', a.dataset.sec === sec));
   }
 
-  window.addEventListener('resize', layout);
-  if (document.fonts?.ready) document.fonts.ready.then(layout).catch(() => {});
-  layout();
+  // 几何布局调度：rAF 去抖 + ResizeObserver（元素从隐藏变可见时自动重算，修复首次打开错位）
+  let layoutRaf = 0;
+  function scheduleLayout() {
+    cancelAnimationFrame(layoutRaf);
+    if (document.visibilityState === 'hidden') { layout(); return; } // 后台标签 rAF 被节流：同步执行
+    layoutRaf = requestAnimationFrame(layout);
+  }
+  window.addEventListener('resize', scheduleLayout);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) scheduleLayout(); // 后台标签中完成登录后切回前台时补一次重算
+  });
+  if (window.ResizeObserver) {
+    try { new ResizeObserver(scheduleLayout).observe(navEl); } catch (e) { /* 忽略 */ }
+  }
+  if (document.fonts?.ready) document.fonts.ready.then(scheduleLayout).catch(() => {});
+  scheduleLayout();
 
-  // 暴露 setActive 给外部（showSection 时同步激活态）
+  // 暴露给外部：区块切换时同步激活态 / 从隐藏恢复时重排
   window.__pillNavSetActive = setActive;
+  window.__pillNavRelayout = scheduleLayout;
 })();

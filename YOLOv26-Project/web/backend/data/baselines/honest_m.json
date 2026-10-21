@@ -1,0 +1,37 @@
+{
+ "tag": "honest_m",
+ "weight": "../第二轮/best.pt",
+ "n_test": 2474,
+ "box": {
+  "P": 0.5177,
+  "R": 0.4272,
+  "mAP50": 0.4272,
+  "mAP50_95": 0.2901,
+  "per_class_mAP50": {
+   "crack": 0.6252,
+   "spalling": 0.3148,
+   "hole": 0.8221,
+   "rebar_exposed": 0.1677,
+   "efflorescence": 0.2063
+  }
+ },
+ "mask": {
+  "P": 0.4987,
+  "R": 0.4048,
+  "mAP50": 0.396,
+  "mAP50_95": 0.2383,
+  "per_class_mAP50": {
+   "crack": 0.5339,
+   "spalling": 0.3088,
+   "hole": 0.8136,
+   "rebar_exposed": 0.1268,
+   "efflorescence": 0.1969
+  }
+ },
+ "speed_ms": {
+  "preprocess": 4.75,
+  "inference": 32.09,
+  "loss": 0.0,
+  "postprocess": 1.06
+ }
+}

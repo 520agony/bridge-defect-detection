@@ -41,9 +41,17 @@ import torch.nn.functional as F
 from ultralytics import YOLO
 
 
+def _imwrite_safe(path, img, params=None):
+    """cv2.imwrite 的中文路径兼容版（imencode + numpy tofile）"""
+    ok, buf = cv2.imencode(Path(path).suffix or ".jpg", img, params or [])
+    if ok:
+        buf.tofile(str(path))
+    return ok
+
+
 def preprocess(img_path, imgsz=640):
     """读取并预处理为 [1,3,640,640] 张量（BGR -> RGB，HWC -> CHW，归一化）"""
-    img = cv2.imread(str(img_path))
+    img = cv2.imdecode(np.fromfile(str(img_path), dtype=np.uint8), cv2.IMREAD_COLOR)
     if img is None:
         raise ValueError(f"无法读取图片: {img_path}")
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -53,10 +61,12 @@ def preprocess(img_path, imgsz=640):
 
 
 def grad_cam(model, x, target_layer_idx, class_id=None):
-    """对单张输入 x 计算目标层的 Grad-CAM 热力图 (H, W)
+    """对单张输入 x 计算目标层的 EigenCAM 热力图 (640, 640)。
 
-    class_id=None 时对全局最高分检测反向传播；否则对指定类别最高分反向传播。
-    返回 (cam, score)，score 为该次反向传播对应的类别分数（用于诊断）。
+    为何不用梯度版：v26端到端头在eval前向里detach了计算图（实测全模型442个
+    参数梯度全0），经典Grad-CAM反传恒得全零图。EigenCAM只用前向激活做PCA，
+    无需反传、换权重不坏，且与类别无关——class_id仅用于score口径。
+    返回 (cam, score)，score 为解码后最高检出置信度（无检出为0）。
     """
     detect = model.model  # DetectionModel
     detect.eval()
@@ -64,51 +74,45 @@ def grad_cam(model, x, target_layer_idx, class_id=None):
     layer = detect.model[target_layer_idx]  # 支持负索引
 
     store = {}
-    def fwd_hook(m, i, o):
-        store["act"] = o
-    def bwd_hook(m, gi, go):
-        store["grad"] = go[0]
-
-    h1 = layer.register_forward_hook(fwd_hook)
-    h2 = layer.register_full_backward_hook(bwd_hook)
-
+    h = layer.register_forward_hook(lambda m_, i, o: store.setdefault("act", o.detach()))
     try:
-        x = x.clone().requires_grad_(True)
-        out = detect(x)  # eval 模式返回 (预测张量, 特征 dict)
-
-        pred = out[0] if isinstance(out, (tuple, list)) else out
-        pred = pred[0]  # [1, 4+nc, N] -> [4+nc, N] 去掉 batch 维
-
-        nc = len(model.names)
-        class_scores = pred[4:4 + nc]  # [nc, N]
-
-        # 目标：全局最高分，或指定类别最高分
-        if class_id is None:
-            target = class_scores.max()  # 整个 [nc, N] 的标量最大值
-        else:
-            target = class_scores[class_id].max()
-
-        detect.zero_grad()
-        target.backward()
-
-        act = store["act"]        # [1, C, H, W]
-        grad = store["grad"]      # [1, C, H, W]
-
-        weights = grad.mean(dim=(2, 3), keepdim=True)   # [1, C, 1, 1]
-        cam = (weights * act).sum(dim=1, keepdim=True)  # [1, 1, H, W]
-        cam = F.relu(cam)
-        cam = F.interpolate(cam, size=(640, 640), mode="bilinear", align_corners=False)
-        cam = cam.squeeze()  # [640, 640]
-        cam = cam.detach().cpu().numpy()
-        # 分位数归一化（99 分位代替最大值）：避免个别极值像素把热区压成一点（视觉上全蓝）
-        p99 = np.percentile(cam, 99)
-        cam = (cam - cam.min()) / (p99 - cam.min() + 1e-8)
-        cam = np.clip(cam, 0, 1)
-        cam = cv2.GaussianBlur(cam, (0, 0), 3)  # 高斯平滑，让热点区域更自然
-        return cam, float(target.detach().cpu())
+        dev = next(detect.parameters()).device
+        with torch.no_grad():
+            _ = detect(x.to(dev))
     finally:
-        h1.remove()
-        h2.remove()
+        h.remove()
+
+    a = store["act"][0].float()  # [C, H, W]
+    c, hh, ww = a.shape
+    flat = a.reshape(c, hh * ww)
+    flat = flat - flat.mean(dim=1, keepdim=True)
+    _, _, vh = torch.linalg.svd(flat, full_matrices=False)
+    cam = vh[0].reshape(hh, ww)
+    cam = torch.where(cam < 0, -cam, cam)
+    cam = cam.detach().cpu().numpy()
+
+    cam = cv2.resize(cam, (640, 640))
+    # 分位数归一化（99 分位代替最大值）：避免个别极值像素把热区压成一点（视觉上全蓝）
+    p99 = np.percentile(cam, 99)
+    cam = (cam - cam.min()) / (p99 - cam.min() + 1e-8)
+    cam = np.clip(cam, 0, 1)
+    cam = cv2.GaussianBlur(cam, (0, 0), 3)  # 高斯平滑，让热点区域更自然
+
+    # score：解码后最高检出置信度（格式无关，走predict）
+    try:
+        rgb = (x[0].permute(1, 2, 0).detach().cpu().numpy() * 255).astype(np.uint8)
+        res = model.predict(rgb, verbose=False)[0]
+        if res.boxes is not None and len(res.boxes):
+            cls = res.boxes.cls.detach().cpu().numpy()
+            conf = res.boxes.conf.detach().cpu().numpy()
+            if class_id is not None:
+                conf = conf[cls == class_id]
+            score = float(conf.max()) if len(conf) else 0.0
+        else:
+            score = 0.0
+    except Exception:
+        score = 0.0
+    return cam, score
 
 
 def overlay_heatmap(img_rgb, cam, alpha=0.5):
@@ -208,7 +212,7 @@ def main():
             label = model.names.get(cid, "all") if cid is not None else "all"
             out_img = overlay_heatmap(img_rgb, cam)
             save_path = out_dir / f"gradcam_{label}_{img_path.stem}.jpg"
-            cv2.imwrite(str(save_path), out_img, [cv2.IMWRITE_JPEG_QUALITY, 92])
+            _imwrite_safe(save_path, out_img, [cv2.IMWRITE_JPEG_QUALITY, 92])
             print(f"[OK] {label:12s} {img_path.name}  (score={score:.3f}) -> {save_path.name}")
         except Exception as e:
             print(f"[ERR] {img_path.name}: {e}")

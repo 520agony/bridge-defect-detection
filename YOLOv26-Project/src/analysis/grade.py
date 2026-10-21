@@ -45,6 +45,21 @@ def _relative_severity(cls_name, m):
     return 5
 
 
+def _basis(cls_name, m, sev):
+    """等级依据说明（供前端 tooltip 与报告展示）"""
+    if cls_name == "crack":
+        v, u, metric, bands = m.get("width_px", 0), "px", "裂缝宽度", [2, 5, 10, 20]
+    elif cls_name == "hole":
+        v, u, metric, bands = m.get("diameter_px", 0), "px", "等效直径", [30, 60, 120, 240]
+    else:
+        v, u, metric, bands = round(m.get("area_frac", 0) * 100, 2), "%", "面积占比", [3, 10, 20, 30]
+    lo = bands[sev - 2] if sev > 1 else 0
+    hi = bands[sev - 1] if sev <= 4 else "∞"
+    return {"metric": metric, "value": v, "unit": u,
+            "band": f"[{lo},{hi})",
+            "short": f"{metric}{v}{u}"}
+
+
 def grade_defect(cls_name, measurements, px_per_mm=None):
     """对单个病害给出等级评估结果
 
@@ -64,7 +79,10 @@ def grade_defect(cls_name, measurements, px_per_mm=None):
     if not calibrated:
         sev = _relative_severity(cls_name, measurements)
         gd = BRIDGE_DEFECT_GRADES[cls_name]["grades"][sev]
-        return {"grade": sev, "name": gd["name"], "action": gd["action"], "needs_calibration": True}
+        b = _basis(cls_name, measurements, sev)
+        return {"grade": sev, "name": gd["name"], "action": gd["action"],
+                "needs_calibration": True, "basis": b,
+                "basis_text": f"{b['short']}，属第{sev}档{b['band']}{b['unit']}；建议：{gd['action']}（像素相对分档，未做米制标定）"}
 
     # 已标定：像素 → 毫米 / 面积比
     meas_mm = {}

@@ -1,0 +1,16 @@
+# 桥梁病害检测 - 5 类 seg 数据集（v2_clean 阶段，2026-09 重置）
+# 由 scripts/build_5class.py 生成
+# 5 类：crack / spalling / hole / rebar_exposed / efflorescence
+
+path: D:/开始做项目/YOLOv26-Project/datasets/final_5class
+train: images/train
+val: images/val
+test: images/test
+
+nc: 5
+names:
+  0: crack          # 裂缝
+  1: spalling       # 剥落
+  2: hole           # 孔洞
+  3: rebar_exposed  # 露筋
+  4: efflorescence  # 泛碱

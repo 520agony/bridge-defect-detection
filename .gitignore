@@ -19,8 +19,9 @@ env/
 # === 运行时数据库 ===
 *.db
 
-# === Web 上传目录（检测图/热力图）===
-YOLOv26-Project/web/backend/data/
+# === Web 运行时目录（只忽略用户上传/输出，演示素材与基线随仓库）===
+YOLOv26-Project/web/backend/data/images/
+YOLOv26-Project/web/backend/data/videos/
 
 # === 数据集（大，不纳入版本控制）===
 datasets/

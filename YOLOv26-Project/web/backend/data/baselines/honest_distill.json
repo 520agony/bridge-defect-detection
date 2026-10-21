@@ -1,0 +1,37 @@
+{
+ "tag": "honest_distill",
+ "weight": "../第三轮/best.pt",
+ "n_test": 2474,
+ "box": {
+  "P": 0.5456,
+  "R": 0.4304,
+  "mAP50": 0.4404,
+  "mAP50_95": 0.3059,
+  "per_class_mAP50": {
+   "crack": 0.6443,
+   "spalling": 0.3479,
+   "hole": 0.8091,
+   "rebar_exposed": 0.2063,
+   "efflorescence": 0.1944
+  }
+ },
+ "mask": {
+  "P": 0.5396,
+  "R": 0.4139,
+  "mAP50": 0.4215,
+  "mAP50_95": 0.251,
+  "per_class_mAP50": {
+   "crack": 0.5697,
+   "spalling": 0.3441,
+   "hole": 0.8273,
+   "rebar_exposed": 0.1708,
+   "efflorescence": 0.1954
+  }
+ },
+ "speed_ms": {
+  "preprocess": 4.73,
+  "inference": 13.75,
+  "loss": 0.0,
+  "postprocess": 1.07
+ }
+}

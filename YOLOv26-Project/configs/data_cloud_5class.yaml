@@ -1,0 +1,16 @@
+# 桥梁病害检测 - 5 类 seg 数据集（云服务器版，相对路径）
+# 与 configs/data_final_5class.yaml 同数据，区别仅 path 为相对路径。
+# 云上跑法（项目根目录）：python scripts/cloud_train.py --mode s
+
+path: datasets/final_5class
+train: images/train
+val: images/val
+test: images/test
+
+nc: 5
+names:
+  0: crack          # 裂缝
+  1: spalling       # 剥落
+  2: hole           # 孔洞
+  3: rebar_exposed  # 露筋
+  4: efflorescence  # 泛碱
