@@ -28,7 +28,18 @@ datasets/
 数据集1/
 数据集2/
 补充数据/
+追加数据/
+点云/
+视频素材/
 *.zip
+
+# === 云训练包（GB 级，含数据压缩包，绝不入库）===
+YOLOv26-Project/server_pack/
+
+# === 融合仿真派生产物（可重生成；meta.json / truth.json 已入库）===
+fusion_sim/sample*/cloud.ply
+fusion_sim/sample*/rgb.png
+fusion_sim/sample*/b2_*
 
 # === 训练输出 ===
 experiments/
